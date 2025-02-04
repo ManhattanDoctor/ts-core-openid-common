@@ -1,0 +1,1 @@
+# ts-core-openid-common
