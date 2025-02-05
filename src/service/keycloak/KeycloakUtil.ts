@@ -36,6 +36,7 @@ export class KeycloakUtil {
         return new KeycloakToken(token).getUserInfo<T>();
     }
 
+    
     // --------------------------------------------------------------------------
     //
     //  Validate Token
