@@ -2,8 +2,9 @@ import { createVerify } from 'crypto';
 import { OpenIdTokenExpiredError, OpenIdTokenInvalidSignatureError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError } from '../../error';
 import { KeycloakResources } from './KeycloakClient';
 import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions, IOpenIdResourceValidationOptions, IOpenIdRoleValidationOptions } from '../IOpenIdOptions';
-import { KeycloakToken } from './KeycloakToken';
 import { IOpenIdUser } from '../../lib';
+import { KeycloakAccessToken } from './KeycloakAccessToken';
+import { KeycloakToken } from './KeycloakToken';
 import * as _ from 'lodash';
 
 export class KeycloakUtil {
@@ -33,9 +34,9 @@ export class KeycloakUtil {
     }
 
     public static async getUserInfo<T extends IOpenIdUser>(token: string): Promise<T> {
-        return new KeycloakToken(token).getUserInfo<T>();
+        return new KeycloakAccessToken(token).getUserInfo<T>();
     }
-    
+
     // --------------------------------------------------------------------------
     //
     //  Validate Token
@@ -44,13 +45,10 @@ export class KeycloakUtil {
 
     public static async validateToken(token: string, options: IOpenIdOfflineValidationOptions): Promise<void> {
         let item = new KeycloakToken(token);
-        if (_.isNil(item)) {
-            throw new OpenIdTokenUndefinedError();
-        }
         if (_.isNil(item.signed)) {
             throw new OpenIdTokenNotSignedError();
         }
-        if (item.isExpired()) {
+        if (item.isExpired) {
             throw new OpenIdTokenExpiredError();
         }
         if (!_.isNil(options.iss) && options.iss !== item.content.iss) {
@@ -91,7 +89,7 @@ export class KeycloakUtil {
     // --------------------------------------------------------------------------
 
     public static async validateRole(token: string, options: IOpenIdRoleValidationOptions): Promise<void> {
-        let item = new KeycloakToken(token);
+        let item = new KeycloakAccessToken(token);
         let roles = !_.isArray(options.role) ? [options.role] : options.role;
         for (let role of roles) {
             let isHasRole = KeycloakUtil.hasRole(item, role);
@@ -108,9 +106,9 @@ export class KeycloakUtil {
         }
     }
 
-    public static hasRole(token: string | KeycloakToken, role: string): boolean {
+    public static hasRole(token: string | KeycloakAccessToken, role: string): boolean {
         if (_.isString(token)) {
-            token = new KeycloakToken(token);
+            token = new KeycloakAccessToken(token);
         }
         let item = KeycloakUtil.parseRole(role);
         switch (item.type) {

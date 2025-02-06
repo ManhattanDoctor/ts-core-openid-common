@@ -1,6 +1,5 @@
-import { DateUtil, ObjectUtil, TransformUtil } from '@ts-core/common';
-import { IOpenIdUser } from '../../lib';
-import { OpenIdTokenInvalidError } from '../../error';
+import { DateUtil, TransformUtil } from '@ts-core/common';
+import { OpenIdTokenInvalidError, OpenIdTokenUndefinedError } from '../../error';
 import * as _ from 'lodash';
 
 export class KeycloakToken {
@@ -17,6 +16,7 @@ export class KeycloakToken {
     protected _content: IOpenIdTokenContent;
     protected _signature: Buffer;
 
+
     // --------------------------------------------------------------------------
     //
     //  Constructor
@@ -24,7 +24,11 @@ export class KeycloakToken {
     // --------------------------------------------------------------------------
 
     constructor(value: string) {
-        this.value = value;
+        if (_.isNil(value)) {
+            throw new OpenIdTokenUndefinedError();
+        }
+        this._value = value;
+        this.commitTokenProperties();
     }
 
     // --------------------------------------------------------------------------
@@ -34,9 +38,6 @@ export class KeycloakToken {
     // --------------------------------------------------------------------------
 
     protected commitTokenProperties(): void {
-        if (_.isNil(this.value)) {
-            throw new OpenIdTokenInvalidError('Token is nil');
-        }
         try {
             let array = this.value.split('.');
             this._signed = array[0] + '.' + array[1];
@@ -46,33 +47,6 @@ export class KeycloakToken {
         } catch (error) {
             throw new OpenIdTokenInvalidError(error.message);
         }
-    }
-
-    protected hasRole(path: string, name: string): boolean {
-        let roles = _.get(this.content, path);
-        return _.isArray(roles) ? roles.includes(name) : false;
-    }
-
-    // --------------------------------------------------------------------------
-    //
-    //  Public Methods
-    //
-    // --------------------------------------------------------------------------
-
-    public isExpired(): boolean {
-        return this.content.exp * DateUtil.MILLISECONDS_SECOND < Date.now();
-    }
-
-    public getUserInfo<T extends IOpenIdUser>(): T {
-        return ObjectUtil.copyProperties(this.content, {});
-    }
-
-    public hasClientRole(name: string): boolean {
-        return this.hasRole(`resource_access.${this.content.azp}.roles`, name);
-    }
-
-    public hasRealmRole(name: string): boolean {
-        return this.hasRole('realm_access.roles', name);
     }
 
     // --------------------------------------------------------------------------
@@ -85,27 +59,24 @@ export class KeycloakToken {
         return this._header;
     }
 
-    public get content(): IOpenIdTokenContent {
-        return this._content;
-    }
-
     public get signed(): string {
         return this._signed;
+    }
+
+    public get content(): IOpenIdTokenContent {
+        return this._content;
     }
 
     public get signature(): Buffer {
         return this._signature;
     }
 
+    public get isExpired(): boolean {
+        return this.content.exp * DateUtil.MILLISECONDS_SECOND < Date.now();
+    }
+
     public get value(): string {
         return this._value;
-    }
-    public set value(value: string) {
-        if (value === this._value) {
-            return;
-        }
-        this._value = value;
-        this.commitTokenProperties();
     }
 }
 

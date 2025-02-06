@@ -56,34 +56,34 @@ export class OpenIdTokenExpiredError extends OpenIdError {
         super(OpenIdErrorCode.TOKEN_EXPIRED, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
-export class OpenIdTokenNotSignedError extends OpenIdError {
-    constructor() {
-        super(OpenIdErrorCode.TOKEN_NOT_SIGNED, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
-    }
-}
 export class OpenIdTokenStaleError extends OpenIdError {
     constructor() {
         super(OpenIdErrorCode.TOKEN_STALE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
+export class OpenIdTokenNotSignedError extends OpenIdError {
+    constructor() {
+        super(OpenIdErrorCode.TOKEN_NOT_SIGNED, null, ExtendedError.HTTP_CODE_FORBIDDEN);
+    }
+}
 export class OpenIdTokenWrongTypeError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_WRONG_TYPE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+        super(OpenIdErrorCode.TOKEN_WRONG_TYPE, null, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenWrongIssError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_WRONG_ISS, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+        super(OpenIdErrorCode.TOKEN_WRONG_ISS, null, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenWrongAudienceError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_WRONG_AUDIENCE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+        super(OpenIdErrorCode.TOKEN_WRONG_AUDIENCE, null, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenWrongClientIdError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_WRONG_CLIENT_ID, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+        super(OpenIdErrorCode.TOKEN_WRONG_CLIENT_ID, null, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenRoleForbiddenError extends OpenIdError<string> {
@@ -93,12 +93,12 @@ export class OpenIdTokenRoleForbiddenError extends OpenIdError<string> {
 }
 export class OpenIdTokenRoleInvalidTypeError extends OpenIdError<string> {
     constructor(type: string) {
-        super(OpenIdErrorCode.TOKEN_ROLE_INVALID_TYPE, type);
+        super(OpenIdErrorCode.TOKEN_ROLE_INVALID_TYPE, type, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenResourceInvalidError extends OpenIdError<any> {
     constructor(details: any) {
-        super(OpenIdErrorCode.TOKEN_RESOURCE_INVALID, details);
+        super(OpenIdErrorCode.TOKEN_RESOURCE_INVALID, details, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenResourceForbiddenError extends OpenIdError<string> {
