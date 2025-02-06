@@ -33,7 +33,7 @@ export class KeycloakUtil {
         return array.length > 1 ? { type: array[0], role: array[1] } : { type: KeycloakRole.CLIENT, role: array[0] };
     }
 
-    public static async getUserInfo<T extends IOpenIdUser>(token: string): Promise<T> {
+    public static getUserInfo<T extends IOpenIdUser>(token: string): T {
         return new KeycloakAccessToken(token).getUserInfo<T>();
     }
 
