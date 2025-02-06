@@ -120,6 +120,7 @@ export class KeycloakClient {
             client_id: this.settings.clientId,
             grant_type: 'refresh_token',
             refresh_token: token,
+            client_secret: this.settings.clientSecret,
         };
         let headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
