@@ -8,10 +8,10 @@ export abstract class OpenIdService {
     //
     // --------------------------------------------------------------------------
 
-    abstract getUserInfo<T extends IOpenIdUser>(token: string): Promise<T>;
+    abstract getUserInfo<T extends IOpenIdUser>(token: string, isOffline?: boolean): Promise<T>;
 
     abstract getTokenByCode<T extends IOpenIdToken>(code: IOpenIdCode): Promise<T>;
-    
+
     abstract getTokenByRefreshToken<T extends IOpenIdToken>(token: string): Promise<T>;
 
     // --------------------------------------------------------------------------

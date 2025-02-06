@@ -35,7 +35,6 @@ export class KeycloakUtil {
     public static async getUserInfo<T extends IOpenIdUser>(token: string): Promise<T> {
         return new KeycloakToken(token).getUserInfo<T>();
     }
-
     
     // --------------------------------------------------------------------------
     //
