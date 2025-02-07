@@ -45,6 +45,10 @@ export class KeycloakService extends OpenIdService {
         return this.client(null).getTokenByRefreshToken(token);
     }
 
+    public async logoutByRefreshToken(token: string): Promise<void> {
+        return this.client(null).logoutByRefreshToken(token);
+    }
+
     // --------------------------------------------------------------------------
     //
     //  Validate Methods

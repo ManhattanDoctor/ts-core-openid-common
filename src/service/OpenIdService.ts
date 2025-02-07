@@ -14,6 +14,8 @@ export abstract class OpenIdService {
 
     abstract getTokenByRefreshToken<T extends IOpenIdToken>(token: string): Promise<T>;
 
+    abstract logoutByRefreshToken(token: string): Promise<void>;
+
     // --------------------------------------------------------------------------
     //
     //  Validate Methods

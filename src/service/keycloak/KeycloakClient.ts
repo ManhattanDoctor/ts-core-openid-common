@@ -141,6 +141,18 @@ export class KeycloakClient {
         return this.post<T>('token', data, headers);
     }
 
+    public logoutByRefreshToken(token: string): Promise<void> {
+        let data = {
+            client_id: this.settings.clientId,
+            client_secret: this.settings.clientSecret,
+            refresh_token: token,
+        };
+        let headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        return this.post('logout', data, headers);
+    }
+
     public async validateToken(options?: IOpenIdOfflineValidationOptions): Promise<void> {
         return !_.isNil(options) ? this.validateOffline(options) : this.validateOnline();
     }
@@ -164,14 +176,14 @@ export class KeycloakClient {
     }
 }
 
-interface IKeycloakError {
+export interface IKeycloakError {
     error: string;
     error_description: string;
 }
 
 export type KeycloakResources = Array<IKeycloakResource>;
 
-interface IKeycloakResource {
+export interface IKeycloakResource {
     rsid: string;
     rsname: string;
     scopes: Array<string>;
