@@ -31,6 +31,11 @@ export class OpenIdError<T = void> extends ExtendedError<T, OpenIdErrorCode> {
 //
 // --------------------------------------------------------------------------
 
+export class OpenIdSessionNotActiveError extends OpenIdError<string> {
+    constructor() {
+        super(OpenIdErrorCode.SESSION_NOT_ACTIVE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+    }
+}
 export class OpenIdTokenUndefinedError extends OpenIdError {
     constructor() {
         super(OpenIdErrorCode.TOKEN_UNDEFINED, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);

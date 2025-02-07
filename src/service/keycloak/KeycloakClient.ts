@@ -1,10 +1,10 @@
-import { ExtendedError, isAxiosError, parseAxiosError } from '@ts-core/common';
+import { ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
 import { IOpenIdCode, IOpenIdToken, IOpenIdUser } from '../../lib';
-import { OpenIdTokenNotActiveError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceInvalidError } from '../../error';
+import { OpenIdSessionNotActiveError, OpenIdTokenNotActiveError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceInvalidError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
 import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions, IOpenIdResourceValidationOptions } from '../IOpenIdOptions';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import * as _ from 'lodash';
 
 export class KeycloakClient {
@@ -28,7 +28,7 @@ export class KeycloakClient {
             return data;
         }
         catch (error) {
-            throw isAxiosError(error) ? parseAxiosError(error) : error;
+            throw isAxiosError(error) ? this.parseAxiosError(error) : error;
         }
     }
 
@@ -38,7 +38,7 @@ export class KeycloakClient {
             return data;
         }
         catch (error) {
-            throw isAxiosError(error) ? parseAxiosError(error) : error;
+            throw isAxiosError(error) ? this.parseAxiosError(error) : error;
         }
     }
 
@@ -61,6 +61,19 @@ export class KeycloakClient {
             delete data.permission;
         }
         return this.post<KeycloakResources>('token', data, headers);
+    }
+
+    protected parseAxiosError<U, V>(axios: AxiosError): ExtendedError<U, V> {
+        let item = parseAxiosError<U, V>(axios);
+        return ObjectUtil.hasOwnProperties(item.details, ['error', 'error_description']) ? this.parseKeycloakError(item as ExtendedError<IKeycloakError, V>) : item;
+    }
+
+    protected parseKeycloakError<V>(item: ExtendedError<IKeycloakError, V>): ExtendedError<any, any> {
+        let { error, error_description } = item.details;
+        if (error === 'invalid_grant' && error_description === 'Session not active') {
+            return new OpenIdSessionNotActiveError();
+        }
+        return item;
     }
 
     // --------------------------------------------------------------------------
@@ -149,6 +162,11 @@ export class KeycloakClient {
         }
         await KeycloakUtil.validateResourceScope(resources, options);
     }
+}
+
+interface IKeycloakError {
+    error: string;
+    error_description: string;
 }
 
 export type KeycloakResources = Array<IKeycloakResource>;

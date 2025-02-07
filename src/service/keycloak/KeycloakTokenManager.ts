@@ -4,7 +4,7 @@ import { KeycloakToken } from './KeycloakToken';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
 import * as _ from 'lodash';
 
-export class KeycloakTokenManager implements IKeycloakTokenManager, IDestroyable {
+export class KeycloakTokenManager implements IKeycloakTokenManager {
     //--------------------------------------------------------------------------
     //
     // 	Properties
@@ -81,7 +81,7 @@ export class KeycloakTokenManager implements IKeycloakTokenManager, IDestroyable
 }
 
 
-export interface IKeycloakTokenManager {
+export interface IKeycloakTokenManager extends IDestroyable {
     readonly access: KeycloakAccessToken;
     readonly refresh: KeycloakToken;
 
