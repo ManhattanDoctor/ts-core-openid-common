@@ -70,8 +70,13 @@ export class KeycloakClient {
 
     protected parseKeycloakError<V>(item: ExtendedError<IKeycloakError, V>): ExtendedError<any, any> {
         let { error, error_description } = item.details;
-        if (error === 'invalid_grant' && error_description === 'Session not active') {
-            return new OpenIdSessionNotActiveError();
+        if (error === 'invalid_grant') {
+            if (error_description === 'Session not active') {
+                return new OpenIdSessionNotActiveError();
+            }
+            if (error_description === 'Token is not active') {
+                return new OpenIdTokenNotActiveError();
+            }
         }
         return item;
     }

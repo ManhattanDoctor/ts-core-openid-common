@@ -16,7 +16,6 @@ export class KeycloakToken {
     protected _content: IOpenIdTokenContent;
     protected _signature: Buffer;
 
-
     // --------------------------------------------------------------------------
     //
     //  Constructor
