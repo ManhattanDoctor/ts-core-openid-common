@@ -1,4 +1,4 @@
-import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions, IOpenIdResourceValidationOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions } from "./IOpenIdOptions";
+import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from "./IOpenIdOptions";
 import { IOpenIdCode, IOpenIdToken, IOpenIdUser } from "../lib";
 
 export abstract class OpenIdService {
@@ -30,5 +30,5 @@ export abstract class OpenIdService {
 
     abstract validateToken(token: string, options?: IOpenIdOfflineValidationOptions): Promise<void>;
 
-    abstract validateResource(token: string, options: IOpenIdResourceValidationOptions): Promise<void>;
+    abstract validateResource(token: string, options: OpenIdResourceValidationOptions): Promise<void>;
 }

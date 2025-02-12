@@ -2,7 +2,7 @@ import { OpenIdService } from '../OpenIdService';
 import { IOpenIdCode, IOpenIdToken, IOpenIdUser } from '../../lib';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakClient } from './KeycloakClient';
-import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions, IOpenIdResourceValidationOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions } from '../IOpenIdOptions';
+import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
 import { KeycloakUtil } from './KeycloakUtil';
 import * as _ from 'lodash';
 
@@ -63,7 +63,7 @@ export class KeycloakService extends OpenIdService {
         return KeycloakUtil.validateRole(token, options);
     }
 
-    public async validateResource(token: string, options: IOpenIdResourceValidationOptions): Promise<void> {
+    public async validateResource(token: string, options: OpenIdResourceValidationOptions): Promise<void> {
         return this.client(token).validateResource(options);
     }
 
@@ -77,7 +77,7 @@ export class KeycloakService extends OpenIdService {
         }
     }
 
-    public async hasResourceScope(token: string, options: IOpenIdResourceScopePermissionOptions): Promise<boolean> {
+    public async hasResourceScope(token: string, options: IOpenIdResourceScopePermissionOptions | Array<IOpenIdResourceScopePermissionOptions>): Promise<boolean> {
         try {
             await this.validateResource(token, options);
             return true;

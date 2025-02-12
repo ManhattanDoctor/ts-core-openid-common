@@ -25,3 +25,5 @@ export interface IOpenIdResourceScopePermissionOptions {
     name: string;
     scope: string | Array<string>;
 }
+
+export type OpenIdResourceValidationOptions = IOpenIdResourceValidationOptions | Array<IOpenIdResourceValidationOptions>;

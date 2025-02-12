@@ -3,7 +3,7 @@ import { IOpenIdCode, IOpenIdToken, IOpenIdUser } from '../../lib';
 import { OpenIdSessionNotActiveError, OpenIdTokenNotActiveError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceInvalidError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
-import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions, IOpenIdResourceValidationOptions } from '../IOpenIdOptions';
+import { IOpenIdOfflineValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
 import axios, { AxiosError } from 'axios';
 import * as _ from 'lodash';
 
@@ -112,12 +112,12 @@ export class KeycloakClient extends DestroyableContainer {
         return KeycloakUtil.validateToken(this.token, options);
     }
 
-    protected async getResources(options: IOpenIdResourceScopePermissionOptions): Promise<KeycloakResources> {
+    protected async getResources(options: OpenIdResourceValidationOptions): Promise<KeycloakResources> {
         let data = {
             audience: this.settings.clientId,
             grant_type: 'urn:ietf:params:oauth:grant-type:uma-ticket',
-            permission: KeycloakUtil.buildResourcePermission(options),
             response_mode: 'permissions',
+            permission: KeycloakUtil.buildResourcePermission(options)
         };
         let headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -179,7 +179,7 @@ export class KeycloakClient extends DestroyableContainer {
         return !_.isNil(options) ? this.validateOffline(options) : this.validateOnline();
     }
 
-    public async validateResource(options: IOpenIdResourceValidationOptions): Promise<void> {
+    public async validateResource(options: OpenIdResourceValidationOptions): Promise<void> {
         let resources: KeycloakResources = null;
         try {
             resources = await this.getResources(options);
