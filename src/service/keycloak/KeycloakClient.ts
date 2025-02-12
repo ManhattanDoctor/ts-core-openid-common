@@ -1,4 +1,4 @@
-import { ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
+import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
 import { IOpenIdCode, IOpenIdToken, IOpenIdUser } from '../../lib';
 import { OpenIdSessionNotActiveError, OpenIdTokenNotActiveError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceInvalidError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
@@ -7,14 +7,31 @@ import { IOpenIdOfflineValidationOptions, IOpenIdResourceScopePermissionOptions,
 import axios, { AxiosError } from 'axios';
 import * as _ from 'lodash';
 
-export class KeycloakClient {
+export class KeycloakClient extends DestroyableContainer {
+    // --------------------------------------------------------------------------
+    //
+    //  Properties
+    //
+    // --------------------------------------------------------------------------
+
+    protected _token: string;
+    protected _settings: IKeycloakSettings;
+
     // --------------------------------------------------------------------------
     //
     //  Constructor
     //
     // --------------------------------------------------------------------------
 
-    constructor(protected settings: IKeycloakSettings, protected token?: string) { }
+    constructor(settings?: IKeycloakSettings, token?: string) {
+        super();
+        if (!_.isNil(token)) {
+            this._token = token;
+        }
+        if (!_.isNil(settings)) {
+            this._settings = settings;
+        }
+    }
 
     // --------------------------------------------------------------------------
     //
@@ -44,23 +61,6 @@ export class KeycloakClient {
 
     protected getUrl(endpoint: string): string {
         return `${this.settings.url}/realms/${this.settings.realm}/protocol/openid-connect/${endpoint}`;
-    }
-
-    protected getResources(options: IOpenIdResourceScopePermissionOptions): Promise<KeycloakResources> {
-        let data = {
-            audience: this.settings.clientId,
-            grant_type: 'urn:ietf:params:oauth:grant-type:uma-ticket',
-            permission: KeycloakUtil.buildResourcePermission(options),
-            response_mode: 'permissions',
-        };
-        let headers = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Bearer ${this.token}`
-        }
-        if (_.isEmpty(data.permission)) {
-            delete data.permission;
-        }
-        return this.post<KeycloakResources>('token', data, headers);
     }
 
     protected parseAxiosError<U, V>(axios: AxiosError): ExtendedError<U, V> {
@@ -110,6 +110,23 @@ export class KeycloakClient {
             options.publicKey = this.settings.realmPublicKey;
         }
         return KeycloakUtil.validateToken(this.token, options);
+    }
+
+    protected async getResources(options: IOpenIdResourceScopePermissionOptions): Promise<KeycloakResources> {
+        let data = {
+            audience: this.settings.clientId,
+            grant_type: 'urn:ietf:params:oauth:grant-type:uma-ticket',
+            permission: KeycloakUtil.buildResourcePermission(options),
+            response_mode: 'permissions',
+        };
+        let headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${this.token}`
+        }
+        if (_.isEmpty(data.permission)) {
+            delete data.permission;
+        }
+        return this.post<KeycloakResources>('token', data, headers);
     }
 
     // --------------------------------------------------------------------------
@@ -178,6 +195,20 @@ export class KeycloakClient {
             }
         }
         await KeycloakUtil.validateResourceScope(resources, options);
+    }
+
+    // --------------------------------------------------------------------------
+    //
+    //  Protected Methods
+    //
+    // --------------------------------------------------------------------------
+
+    protected get token(): string {
+        return this._token;
+    }
+
+    protected get settings(): IKeycloakSettings {
+        return this._settings;
     }
 }
 
