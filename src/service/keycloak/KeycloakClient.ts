@@ -23,13 +23,13 @@ export class KeycloakClient extends DestroyableContainer {
     //
     // --------------------------------------------------------------------------
 
-    constructor(settings?: IKeycloakSettings, token?: string) {
+    constructor(token?: string, settings?: IKeycloakSettings) {
         super();
         if (!_.isNil(token)) {
-            this._token = token;
+            this.token = token;
         }
         if (!_.isNil(settings)) {
-            this._settings = settings;
+            this.settings = settings;
         }
     }
 
@@ -83,6 +83,15 @@ export class KeycloakClient extends DestroyableContainer {
 
     // --------------------------------------------------------------------------
     //
+    //  Protected Methods
+    //
+    // --------------------------------------------------------------------------
+
+    protected commitTokenProperties(): void { }
+    protected commitSettingsProperties(): void { }
+
+    // --------------------------------------------------------------------------
+    //
     //  Validation Methods
     //
     // --------------------------------------------------------------------------
@@ -121,7 +130,7 @@ export class KeycloakClient extends DestroyableContainer {
         if (!_.isEmpty(permissions)) {
             permissions.forEach(item => data.append('permission', item));
         }
-        
+
         try {
             return this.post<KeycloakResources>('token', data, {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -199,9 +208,27 @@ export class KeycloakClient extends DestroyableContainer {
     protected get token(): string {
         return this._token;
     }
+    protected set token(value: string) {
+        if (value === this._token) {
+            return;
+        }
+        this._token = value;
+        if (!_.isNil(value)) {
+            this.commitTokenProperties();
+        }
+    }
 
     protected get settings(): IKeycloakSettings {
         return this._settings;
+    }
+    protected set settings(value: IKeycloakSettings) {
+        if (value === this._settings) {
+            return;
+        }
+        this._settings = value;
+        if (!_.isNil(value)) {
+            this.commitSettingsProperties();
+        }
     }
 }
 

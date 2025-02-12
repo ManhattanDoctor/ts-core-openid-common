@@ -24,7 +24,7 @@ export class KeycloakService extends OpenIdService {
     // --------------------------------------------------------------------------
 
     protected client(token: string): KeycloakClient {
-        return new KeycloakClient(this.settings, token);
+        return new KeycloakClient(token, this.settings);
     }
 
     // --------------------------------------------------------------------------
