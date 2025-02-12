@@ -1,10 +1,11 @@
-import { IDestroyable } from '@ts-core/common';
+import { IDestroyable, Loadable, ObservableData } from '@ts-core/common';
 import { IOpenIdToken } from '../../lib';
 import { KeycloakToken } from './KeycloakToken';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
+import { filter, map, Observable } from 'rxjs';
 import * as _ from 'lodash';
 
-export class KeycloakTokenManager implements IKeycloakTokenManager {
+export class KeycloakTokenManager extends Loadable<KeycloakTokenManagerEvent, IOpenIdToken> implements IKeycloakTokenManager {
     //--------------------------------------------------------------------------
     //
     // 	Properties
@@ -22,6 +23,7 @@ export class KeycloakTokenManager implements IKeycloakTokenManager {
     //--------------------------------------------------------------------------
 
     constructor(value?: IOpenIdToken) {
+        super();
         this.value = value;
     }
 
@@ -34,6 +36,9 @@ export class KeycloakTokenManager implements IKeycloakTokenManager {
     protected commitValueProperties(): void {
         this._access = this.isValid ? new KeycloakAccessToken(this.value.access_token) : null;
         this._refresh = this.isValid ? new KeycloakToken(this.value.refresh_token) : null;
+        if (!_.isNil(this.observer)) {
+            this.observer.next(new ObservableData(KeycloakTokenManagerEvent.CHANGED, this.value));
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -43,6 +48,10 @@ export class KeycloakTokenManager implements IKeycloakTokenManager {
     //--------------------------------------------------------------------------
 
     public destroy(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+        super.destroy();
         this.value = null;
     }
 
@@ -60,6 +69,18 @@ export class KeycloakTokenManager implements IKeycloakTokenManager {
         return this._refresh;
     }
 
+    public get value(): IOpenIdToken {
+        return this._value;
+    }
+
+    public set value(value: IOpenIdToken) {
+        if (value === this._value) {
+            return;
+        }
+        this._value = value;
+        this.commitValueProperties();
+    }
+
     public get isExpired(): boolean {
         return !this.isValid || this.access.isExpired;
     }
@@ -68,16 +89,16 @@ export class KeycloakTokenManager implements IKeycloakTokenManager {
         return !_.isNil(this.value);
     }
 
-    public get value(): IOpenIdToken {
-        return this._value;
+    public get changed(): Observable<IOpenIdToken> {
+        return this.events.pipe(
+            filter(item => item.type === KeycloakTokenManagerEvent.CHANGED),
+            map(() => null)
+        );
     }
-    public set value(value: IOpenIdToken) {
-        if (value === this._value) {
-            return;
-        }
-        this._value = value;
-        this.commitValueProperties();
-    }
+}
+
+export enum KeycloakTokenManagerEvent {
+    CHANGED = 'CHANGED'
 }
 
 
