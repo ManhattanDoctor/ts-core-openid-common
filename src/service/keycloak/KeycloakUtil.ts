@@ -14,20 +14,17 @@ export class KeycloakUtil {
     //
     // --------------------------------------------------------------------------
 
-    public static buildResourcePermission(options: OpenIdResourceValidationOptions): string {
-        if (_.isNil(options)) {
-            return null;
-        }
+    public static buildResourcePermission(options: OpenIdResourceValidationOptions): Array<string> {
         let items = !_.isArray(options) ? [options] : options;
         let permissions = new Array();
         for (let item of items) {
-            if (_.isEmpty(item.name) || _.isEmpty(item.scope)) {
+            if (_.isNil(item) || _.isEmpty(item.name) || _.isEmpty(item.scope)) {
                 continue;
             }
             let scopes = !_.isArray(item.scope) ? [item.scope] : item.scope;
             permissions.push(`${item.name}#${scopes.join(',')}`);
         }
-        return permissions.join(',');
+        return permissions;
     }
 
     public static parseRole(role: string): IKeycloakRole {
@@ -45,7 +42,7 @@ export class KeycloakUtil {
     //
     // --------------------------------------------------------------------------
 
-    public static async validateToken(token: string, options: IOpenIdOfflineValidationOptions): Promise<void> {
+    public static async validateToken(token: string, options: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void> {
         let item = new KeycloakToken(token);
         if (_.isNil(item.signed)) {
             throw new OpenIdTokenNotSignedError();
@@ -77,7 +74,10 @@ export class KeycloakUtil {
             }
         }
         if (!_.isNil(options.publicKey)) {
-            let verify = createVerify('RSA-SHA256').update(item.signed);
+            if (_.isNil(algorithm)) {
+                algorithm = 'RSA-SHA256';
+            }
+            let verify = createVerify(algorithm).update(item.signed);
             if (!verify.verify(options.publicKey, item.signature.toString('base64'), 'base64')) {
                 throw new OpenIdTokenInvalidSignatureError();
             }
@@ -123,7 +123,7 @@ export class KeycloakUtil {
         }
     }
 
-    public static async validateResourceScope(resources: KeycloakResources, options: OpenIdResourceValidationOptions): Promise<void> {
+    public static async validateResourceScope(options: OpenIdResourceValidationOptions, resources: KeycloakResources): Promise<void> {
         let items = !_.isArray(options) ? [options] : options;
         for (let item of items) {
             let resource = _.find(resources, { rsname: item.name });

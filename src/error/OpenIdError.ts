@@ -107,9 +107,9 @@ export class OpenIdTokenResourceInvalidError extends OpenIdError<any> {
         super(OpenIdErrorCode.TOKEN_RESOURCE_INVALID, details, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
-export class OpenIdTokenResourceForbiddenError extends OpenIdError<string> {
-    constructor(resource: string) {
-        super(OpenIdErrorCode.TOKEN_RESOURCE_FORBIDDEN, resource, ExtendedError.HTTP_CODE_FORBIDDEN);
+export class OpenIdTokenResourceForbiddenError extends OpenIdError<Array<string>> {
+    constructor(permissions: Array<string>) {
+        super(OpenIdErrorCode.TOKEN_RESOURCE_FORBIDDEN, permissions, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenResourceScopeForbiddenError extends OpenIdError<IOpenIdResourceScopePermissionOptions> {

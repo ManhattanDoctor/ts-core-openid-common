@@ -91,42 +91,53 @@ export class KeycloakClient extends DestroyableContainer {
         let data = {
             token: this.token,
             token_type_hint: 'requesting_party_token'
-        };
-        let headers = {
+        }
+        let { active } = await this.post<any>(`token/introspect`, data, {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': `Basic ${Buffer.from(`${this.settings.clientId}:${this.settings.clientSecret}`).toString('base64')}`
-        }
-        let { active } = await this.post<any>(`token/introspect`, data, headers);
+        });
         if (!active) {
             throw new OpenIdTokenNotActiveError();
         }
     }
 
-    protected async validateOffline(options: IOpenIdOfflineValidationOptions): Promise<void> {
+    protected async validateOffline(options: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void> {
         if (_.isNil(options.clientId)) {
             options.clientId = this.settings.clientId;
         }
         if (_.isNil(options.publicKey)) {
             options.publicKey = this.settings.realmPublicKey;
         }
-        return KeycloakUtil.validateToken(this.token, options);
+        return KeycloakUtil.validateToken(this.token, options, algorithm);
     }
 
-    protected async getResources(options: OpenIdResourceValidationOptions): Promise<KeycloakResources> {
-        let data = {
-            audience: this.settings.clientId,
-            grant_type: 'urn:ietf:params:oauth:grant-type:uma-ticket',
-            response_mode: 'permissions',
-            permission: KeycloakUtil.buildResourcePermission(options)
-        };
-        let headers = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Bearer ${this.token}`
+    public async getResources(options?: OpenIdResourceValidationOptions): Promise<KeycloakResources> {
+        var data = new URLSearchParams();
+        data.append('audience', this.settings.clientId);
+        data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
+        data.append('response_mode', 'permissions');
+
+        let permissions = KeycloakUtil.buildResourcePermission(options);
+        if (!_.isEmpty(permissions)) {
+            permissions.forEach(item => data.append('permission', item));
         }
-        if (_.isEmpty(data.permission)) {
-            delete data.permission;
+        
+        try {
+            return this.post<KeycloakResources>('token', data, {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Bearer ${this.token}`
+            });
         }
-        return this.post<KeycloakResources>('token', data, headers);
+        catch (error) {
+            switch (error.code) {
+                case ExtendedError.HTTP_CODE_BAD_REQUEST:
+                    throw new OpenIdTokenResourceInvalidError(error.details);
+                case ExtendedError.HTTP_CODE_FORBIDDEN:
+                    throw new OpenIdTokenResourceForbiddenError(permissions);
+                default:
+                    throw error;
+            }
+        }
     }
 
     // --------------------------------------------------------------------------
@@ -136,7 +147,9 @@ export class KeycloakClient extends DestroyableContainer {
     // --------------------------------------------------------------------------
 
     public async getUserInfo<T extends IOpenIdUser>(isOffline?: boolean): Promise<T> {
-        return isOffline ? KeycloakUtil.getUserInfo<T>(this.token) : this.get('userinfo', null, { 'Authorization': `Bearer ${this.token}` });
+        return isOffline ? KeycloakUtil.getUserInfo<T>(this.token) : this.get('userinfo', null, {
+            'Authorization': `Bearer ${this.token}`
+        });
     }
 
     public async getTokenByCode<T extends IOpenIdToken>(code: IOpenIdCode): Promise<T> {
@@ -157,10 +170,7 @@ export class KeycloakClient extends DestroyableContainer {
             refresh_token: token,
             client_secret: this.settings.clientSecret,
         };
-        let headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        return this.post<T>('token', data, headers);
+        return this.post<T>('token', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
     }
 
     public logoutByRefreshToken(token: string): Promise<void> {
@@ -169,32 +179,15 @@ export class KeycloakClient extends DestroyableContainer {
             client_secret: this.settings.clientSecret,
             refresh_token: token,
         };
-        let headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        return this.post('logout', data, headers);
+        return this.post('logout', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
     }
 
-    public async validateToken(options?: IOpenIdOfflineValidationOptions): Promise<void> {
-        return !_.isNil(options) ? this.validateOffline(options) : this.validateOnline();
+    public async validateToken(options?: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void> {
+        return !_.isNil(options) ? this.validateOffline(options, algorithm) : this.validateOnline();
     }
 
-    public async validateResource(options: OpenIdResourceValidationOptions): Promise<void> {
-        let resources: KeycloakResources = null;
-        try {
-            resources = await this.getResources(options);
-        }
-        catch (error) {
-            switch (error.code) {
-                case ExtendedError.HTTP_CODE_BAD_REQUEST:
-                    throw new OpenIdTokenResourceInvalidError(error.details);
-                case ExtendedError.HTTP_CODE_FORBIDDEN:
-                    throw new OpenIdTokenResourceForbiddenError(KeycloakUtil.buildResourcePermission(options));
-                default:
-                    throw error;
-            }
-        }
-        await KeycloakUtil.validateResourceScope(resources, options);
+    public async validateResource(options: OpenIdResourceValidationOptions, resources?: KeycloakResources): Promise<void> {
+        await KeycloakUtil.validateResourceScope(options, !_.isNil(resources) ? resources : await this.getResources(options));
     }
 
     // --------------------------------------------------------------------------

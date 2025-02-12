@@ -28,7 +28,7 @@ export abstract class OpenIdService {
 
     abstract validateRole(token: string, options: IOpenIdRoleValidationOptions): Promise<void>;
 
-    abstract validateToken(token: string, options?: IOpenIdOfflineValidationOptions): Promise<void>;
+    abstract validateToken(token: string, options?: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void>;
 
     abstract validateResource(token: string, options: OpenIdResourceValidationOptions): Promise<void>;
 }

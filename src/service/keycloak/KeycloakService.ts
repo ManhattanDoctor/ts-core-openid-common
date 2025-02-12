@@ -55,8 +55,8 @@ export class KeycloakService extends OpenIdService {
     //
     // --------------------------------------------------------------------------
 
-    public async validateToken(token: string, options?: IOpenIdOfflineValidationOptions): Promise<void> {
-        return this.client(token).validateToken(options);
+    public async validateToken(token: string, options?: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void> {
+        return this.client(token).validateToken(options, algorithm);
     }
 
     public async validateRole(token: string, options: IOpenIdRoleValidationOptions): Promise<void> {
