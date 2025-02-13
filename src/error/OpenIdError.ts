@@ -52,9 +52,14 @@ export class OpenIdTokenInvalidError extends OpenIdError<string> {
         super(OpenIdErrorCode.TOKEN_INVALID, message, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
-export class OpenIdTokenInvalidSignatureError extends OpenIdError {
+export class OpenIdTokenSignatureInvalidError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_INVALID_SIGNATURE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+        super(OpenIdErrorCode.TOKEN_SIGNATURE_INVALID, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+    }
+}
+export class OpenIdTokenSignatureAlgorithmUnknownError extends OpenIdError<string> {
+    constructor(algorithm: string) {
+        super(OpenIdErrorCode.TOKEN_SIGNATURE_ALGORITHM_UNKNOWN, algorithm, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
 export class OpenIdTokenExpiredError extends OpenIdError {
@@ -115,5 +120,10 @@ export class OpenIdTokenResourceForbiddenError extends OpenIdError<Array<string>
 export class OpenIdTokenResourceScopeForbiddenError extends OpenIdError<IOpenIdResourceScopePermissionOptions> {
     constructor(options: IOpenIdResourceScopePermissionOptions) {
         super(OpenIdErrorCode.TOKEN_RESOURCE_SCOPE_FORBIDDEN, options, ExtendedError.HTTP_CODE_FORBIDDEN);
+    }
+}
+export class OpenIdOptionsPublicKeyUndefinedError extends OpenIdError {
+    constructor() {
+        super(OpenIdErrorCode.OPTIONS_PUBLIC_KEY_UNDEFINED, null, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }

@@ -79,6 +79,12 @@ export class KeycloakToken {
     }
 }
 
-export type IOpenIdTokenHeader = Record<string, string>;
+export interface IOpenIdTokenHeader {
+    alg: string;
+    typ: string;
+    kid: string;
+
+    [key: string]: any;
+}
 
 export type IOpenIdTokenContent = Record<string, any>;

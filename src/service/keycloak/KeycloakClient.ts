@@ -110,14 +110,14 @@ export class KeycloakClient extends DestroyableContainer {
         }
     }
 
-    protected async validateOffline(options: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void> {
+    protected async validateOffline(options: IOpenIdOfflineValidationOptions): Promise<void> {
         if (_.isNil(options.clientId)) {
             options.clientId = this.settings.clientId;
         }
         if (_.isNil(options.publicKey)) {
             options.publicKey = this.settings.realmPublicKey;
         }
-        return KeycloakUtil.validateToken(this.token, options, algorithm);
+        return KeycloakUtil.validateToken(this.token, options);
     }
 
     public async getResources(options?: OpenIdResourceValidationOptions): Promise<KeycloakResources> {
@@ -130,7 +130,6 @@ export class KeycloakClient extends DestroyableContainer {
         if (!_.isEmpty(permissions)) {
             permissions.forEach(item => data.append('permission', item));
         }
-
         try {
             return this.post<KeycloakResources>('token', data, {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -191,8 +190,8 @@ export class KeycloakClient extends DestroyableContainer {
         return this.post('logout', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
     }
 
-    public async validateToken(options?: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void> {
-        return !_.isNil(options) ? this.validateOffline(options, algorithm) : this.validateOnline();
+    public async validateToken(options?: IOpenIdOfflineValidationOptions): Promise<void> {
+        return !_.isNil(options) ? this.validateOffline(options) : this.validateOnline();
     }
 
     public async validateResource(options: OpenIdResourceValidationOptions, resources?: KeycloakResources): Promise<void> {

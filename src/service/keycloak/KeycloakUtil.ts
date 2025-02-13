@@ -1,5 +1,5 @@
 import { createVerify } from 'crypto';
-import { OpenIdTokenExpiredError, OpenIdTokenInvalidSignatureError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError } from '../../error';
+import { OpenIdOptionsPublicKeyUndefinedError, OpenIdTokenExpiredError, OpenIdTokenSignatureInvalidError, OpenIdTokenSignatureAlgorithmUnknownError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError } from '../../error';
 import { KeycloakResources } from './KeycloakClient';
 import { IOpenIdOfflineValidationOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
 import { IOpenIdUser } from '../../lib';
@@ -42,7 +42,7 @@ export class KeycloakUtil {
     //
     // --------------------------------------------------------------------------
 
-    public static async validateToken(token: string, options: IOpenIdOfflineValidationOptions, algorithm?: string): Promise<void> {
+    public static async validateToken(token: string, options: IOpenIdOfflineValidationOptions): Promise<void> {
         let item = new KeycloakToken(token);
         if (_.isNil(item.signed)) {
             throw new OpenIdTokenNotSignedError();
@@ -73,14 +73,26 @@ export class KeycloakUtil {
                 throw new OpenIdTokenWrongAudienceError();
             }
         }
-        if (!_.isNil(options.publicKey)) {
-            if (_.isNil(algorithm)) {
+        await KeycloakUtil.validateTokenSignature(item, options);
+    }
+
+    public static async validateTokenSignature(token: KeycloakToken, options: IOpenIdOfflineValidationOptions): Promise<void> {
+        if (_.isNil(options.publicKey)) {
+            throw new OpenIdOptionsPublicKeyUndefinedError();
+        }
+
+        let algorithm = null;
+        let { alg } = token.header;
+        switch (alg) {
+            case 'RS256':
                 algorithm = 'RSA-SHA256';
-            }
-            let verify = createVerify(algorithm).update(item.signed);
-            if (!verify.verify(options.publicKey, item.signature.toString('base64'), 'base64')) {
-                throw new OpenIdTokenInvalidSignatureError();
-            }
+                break;
+            default:
+                throw new OpenIdTokenSignatureAlgorithmUnknownError(alg);
+        }
+        let verify = createVerify(algorithm).update(token.signed);
+        if (!verify.verify(options.publicKey, token.signature.toString('base64'), 'base64')) {
+            throw new OpenIdTokenSignatureInvalidError();
         }
     }
 
