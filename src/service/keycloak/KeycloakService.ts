@@ -60,7 +60,7 @@ export class KeycloakService extends OpenIdService {
     }
 
     public async validateRole(token: string, options: IOpenIdRoleValidationOptions): Promise<void> {
-        return KeycloakUtil.validateRole(token, options);
+        KeycloakUtil.validateRole(token, options);
     }
 
     public async validateResource(token: string, options: OpenIdResourceValidationOptions): Promise<void> {

@@ -102,7 +102,7 @@ export class KeycloakUtil {
     //
     // --------------------------------------------------------------------------
 
-    public static async validateRole(token: string, options: IOpenIdRoleValidationOptions): Promise<void> {
+    public static validateRole(token: string, options: IOpenIdRoleValidationOptions): void {
         let item = new KeycloakAccessToken(token);
         let roles = !_.isArray(options.role) ? [options.role] : options.role;
         for (let role of roles) {
@@ -135,24 +135,25 @@ export class KeycloakUtil {
         }
     }
 
-    public static async validateResourceScope(options: OpenIdResourceValidationOptions, resources: KeycloakResources): Promise<void> {
+    public static validateResourceScope(options: OpenIdResourceValidationOptions, resources: KeycloakResources): void {
         let items = !_.isArray(options) ? [options] : options;
         for (let item of items) {
-            let resource = _.find(resources, { rsname: item.name });
+            let { name, scope, isAny } = item;
+            let resource = _.find(resources, { rsname: name });
             if (_.isNil(resource)) {
                 throw new OpenIdTokenResourceForbiddenError(resource);
             }
-            let scopes = !_.isArray(item.scope) ? [item.scope] : item.scope;
+            let scopes = !_.isArray(scope) ? [scope] : scope;
             for (let scope of scopes) {
                 let isHasScope = resource.scopes.includes(scope);
-                if (!item.isAny) {
+                if (!isAny) {
                     if (!isHasScope) {
-                        throw new OpenIdTokenResourceScopeForbiddenError({ name: item.name, scope: scope });
+                        throw new OpenIdTokenResourceScopeForbiddenError(item);
                     }
                 }
                 else {
                     if (isHasScope) {
-                        return;
+                        continue;
                     }
                 }
             }

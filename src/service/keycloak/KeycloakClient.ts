@@ -194,8 +194,8 @@ export class KeycloakClient extends DestroyableContainer {
         return !_.isNil(options) ? this.validateOffline(options) : this.validateOnline();
     }
 
-    public async validateResource(options: OpenIdResourceValidationOptions, resources?: KeycloakResources): Promise<void> {
-        await KeycloakUtil.validateResourceScope(options, !_.isNil(resources) ? resources : await this.getResources(options));
+    public async validateResource(options: OpenIdResourceValidationOptions): Promise<void> {
+        KeycloakUtil.validateResourceScope(options, await this.getResources(options));
     }
 
     // --------------------------------------------------------------------------
