@@ -1,6 +1,6 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
 import { IOpenIdCode, IOpenIdToken, IOpenIdUser } from '../../lib';
-import { OpenIdSessionNotActiveError, OpenIdTokenNotActiveError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceInvalidError } from '../../error';
+import { OpenIdNotAuthorizedError, OpenIdSessionNotActiveError, OpenIdTokenNotActiveError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceInvalidError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
 import { IOpenIdOfflineValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
@@ -78,6 +78,22 @@ export class KeycloakClient extends DestroyableContainer {
                 return new OpenIdTokenNotActiveError();
             }
         }
+        if (error === 'access_denied') {
+            if (error_description === 'not_authorized') {
+                return new OpenIdNotAuthorizedError();
+            }
+
+        }
+        /*
+            switch (error.code) {
+            case ExtendedError.HTTP_CODE_BAD_REQUEST:
+                throw new OpenIdTokenResourceInvalidError(error.details);
+            case ExtendedError.HTTP_CODE_FORBIDDEN:
+                throw new OpenIdTokenResourceForbiddenError(permissions);
+            default:
+                throw error;
+            
+        */
         return item;
     }
 
@@ -130,22 +146,11 @@ export class KeycloakClient extends DestroyableContainer {
         if (!_.isEmpty(permissions)) {
             permissions.forEach(item => data.append('permission', item));
         }
-        try {
-            return this.post<KeycloakResources>('token', data, {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': `Bearer ${this.token}`
-            });
-        }
-        catch (error) {
-            switch (error.code) {
-                case ExtendedError.HTTP_CODE_BAD_REQUEST:
-                    throw new OpenIdTokenResourceInvalidError(error.details);
-                case ExtendedError.HTTP_CODE_FORBIDDEN:
-                    throw new OpenIdTokenResourceForbiddenError(permissions);
-                default:
-                    throw error;
-            }
-        }
+        return this.post<KeycloakResources>('token', data, {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${this.token}`
+        });
+
     }
 
     // --------------------------------------------------------------------------
