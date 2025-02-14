@@ -2,7 +2,7 @@
 import { TransportHttp, ITransportHttpRequest, ITransportCommandOptions, ITransportCommand, ITransportHttpSettings } from '@ts-core/common';
 import { IKeycloakTokenManager } from './KeycloakTokenManager';
 import { OpenIdTokenUndefinedError } from '../../error';
-import { IOpenIdToken } from '../../lib';
+import { IOpenIdRefreshable } from '../../lib';
 import * as _ from 'lodash';
 
 export abstract class KeycloakHttpTransport<S extends ITransportHttpSettings = ITransportHttpSettings, O extends ITransportCommandOptions = ITransportCommandOptions> extends TransportHttp<S, O> {
@@ -22,7 +22,7 @@ export abstract class KeycloakHttpTransport<S extends ITransportHttpSettings = I
 
     protected commitTokenProperties(): void { }
 
-    protected abstract getTokenByRefreshToken(token: string): Promise<IOpenIdToken>;
+    protected abstract getTokenByRefreshToken(token: string): Promise<IOpenIdRefreshable>;
 
     protected abstract isSkipRefreshToken<U = any>(path: string, request?: ITransportHttpRequest<U>, options?: ITransportCommandOptions): boolean;
 

@@ -32,26 +32,32 @@ export class OpenIdError<T = void> extends ExtendedError<T, OpenIdErrorCode> {
 //
 // --------------------------------------------------------------------------
 
-export class OpenIdNotAuthorizedError extends OpenIdError<string> {
-    constructor() {
-        super(OpenIdErrorCode.NOT_AUTHORIZED, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+export interface IOpenIdErrorDetails {
+    code: string;
+    description: string;
+}
+export class OpenIdNotAuthorizedError extends OpenIdError<IOpenIdErrorDetails> {
+    constructor(details: IOpenIdErrorDetails) {
+        super(OpenIdErrorCode.NOT_AUTHORIZED, details, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
-export class OpenIdSessionNotActiveError extends OpenIdError<string> {
-    constructor() {
-        super(OpenIdErrorCode.SESSION_NOT_ACTIVE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+export class OpenIdSessionNotActiveError extends OpenIdError<IOpenIdErrorDetails> {
+    constructor(details: IOpenIdErrorDetails) {
+        super(OpenIdErrorCode.SESSION_NOT_ACTIVE, details, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
+export class OpenIdTokenNotActiveError extends OpenIdError<IOpenIdErrorDetails> {
+    constructor(details: IOpenIdErrorDetails) {
+        super(OpenIdErrorCode.TOKEN_NOT_ACTIVE, details, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+    }
+}
+//
 export class OpenIdTokenUndefinedError extends OpenIdError {
     constructor() {
         super(OpenIdErrorCode.TOKEN_UNDEFINED, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
-export class OpenIdTokenNotActiveError extends OpenIdError {
-    constructor() {
-        super(OpenIdErrorCode.TOKEN_NOT_ACTIVE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
-    }
-}
+
 export class OpenIdTokenInvalidError extends OpenIdError<string> {
     constructor(message: string) {
         super(OpenIdErrorCode.TOKEN_INVALID, message, ExtendedError.HTTP_CODE_UNAUTHORIZED);

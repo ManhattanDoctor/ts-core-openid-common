@@ -1,8 +1,9 @@
 import { DateUtil, TransformUtil } from '@ts-core/common';
 import { OpenIdTokenInvalidError, OpenIdTokenUndefinedError } from '../../error';
+import { IOpenIdToken } from '../../lib';
 import * as _ from 'lodash';
 
-export class KeycloakToken {
+export class KeycloakToken implements IOpenIdToken {
     // --------------------------------------------------------------------------
     //
     //  Properties

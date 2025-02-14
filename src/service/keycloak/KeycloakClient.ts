@@ -1,6 +1,6 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
-import { IOpenIdCode, IOpenIdToken, IOpenIdUser } from '../../lib';
-import { OpenIdNotAuthorizedError, OpenIdSessionNotActiveError, OpenIdTokenNotActiveError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceInvalidError } from '../../error';
+import { IOpenIdCode, IOpenIdRefreshable, IOpenIdUser } from '../../lib';
+import { OpenIdNotAuthorizedError, OpenIdSessionNotActiveError, OpenIdTokenNotActiveError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
 import { IOpenIdOfflineValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
@@ -39,7 +39,7 @@ export class KeycloakClient extends DestroyableContainer {
     //
     // --------------------------------------------------------------------------
 
-    protected async post<T>(url: string, body?: any, headers?: any): Promise<T> {
+    protected async post<T = any>(url: string, body?: any, headers?: any): Promise<T> {
         try {
             let { data } = await axios.post<T>(this.getUrl(url), new URLSearchParams(body), { headers });
             return data;
@@ -49,7 +49,7 @@ export class KeycloakClient extends DestroyableContainer {
         }
     }
 
-    protected async get<T>(url: string, params?: any, headers?: any): Promise<T> {
+    protected async get<T = any>(url: string, params?: any, headers?: any): Promise<T> {
         try {
             let { data } = await axios.get<T>(this.getUrl(url), { params, headers });
             return data;
@@ -70,30 +70,21 @@ export class KeycloakClient extends DestroyableContainer {
 
     protected parseKeycloakError<V>(item: ExtendedError<IKeycloakError, V>): ExtendedError<any, any> {
         let { error, error_description } = item.details;
+        let details = { code: error, description: error_description };
         if (error === 'invalid_grant') {
             if (error_description === 'Session not active') {
-                return new OpenIdSessionNotActiveError();
+                return new OpenIdSessionNotActiveError(details);
             }
             if (error_description === 'Token is not active') {
-                return new OpenIdTokenNotActiveError();
+                return new OpenIdTokenNotActiveError(details);
             }
         }
         if (error === 'access_denied') {
             if (error_description === 'not_authorized') {
-                return new OpenIdNotAuthorizedError();
+                return new OpenIdNotAuthorizedError(details);
             }
 
         }
-        /*
-            switch (error.code) {
-            case ExtendedError.HTTP_CODE_BAD_REQUEST:
-                throw new OpenIdTokenResourceInvalidError(error.details);
-            case ExtendedError.HTTP_CODE_FORBIDDEN:
-                throw new OpenIdTokenResourceForbiddenError(permissions);
-            default:
-                throw error;
-            
-        */
         return item;
     }
 
@@ -117,12 +108,12 @@ export class KeycloakClient extends DestroyableContainer {
             token: this.token,
             token_type_hint: 'requesting_party_token'
         }
-        let { active } = await this.post<any>(`token/introspect`, data, {
+        let item = await this.post<any>(`token/introspect`, data, {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': `Basic ${Buffer.from(`${this.settings.clientId}:${this.settings.clientSecret}`).toString('base64')}`
         });
-        if (!active) {
-            throw new OpenIdTokenNotActiveError();
+        if (!item.active) {
+            throw new OpenIdTokenNotActiveError(item);
         }
     }
 
@@ -165,7 +156,7 @@ export class KeycloakClient extends DestroyableContainer {
         });
     }
 
-    public async getTokenByCode<T extends IOpenIdToken>(code: IOpenIdCode): Promise<T> {
+    public async getTokenByCode<T extends IOpenIdRefreshable>(code: IOpenIdCode): Promise<T> {
         let data = {
             code: code.code,
             client_id: this.settings.clientId,
@@ -173,17 +164,19 @@ export class KeycloakClient extends DestroyableContainer {
             redirect_uri: code.redirectUri,
             client_secret: this.settings.clientSecret,
         };
-        return this.post<T>('token', data);
+        let { access_token, refresh_token } = await this.post('token', data);
+        return { accessToken: access_token, refresh_token: refresh_token } as any;
     }
 
-    public getTokenByRefreshToken<T extends IOpenIdToken>(token: string): Promise<T> {
+    public async getTokenByRefreshToken<T extends IOpenIdRefreshable>(token: string): Promise<T> {
         let data = {
             client_id: this.settings.clientId,
             grant_type: 'refresh_token',
             refresh_token: token,
             client_secret: this.settings.clientSecret,
         };
-        return this.post<T>('token', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
+        let { access_token, refresh_token } = await this.post('token', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
+        return { accessToken: access_token, refresh_token: refresh_token } as any;
     }
 
     public logoutByRefreshToken(token: string): Promise<void> {

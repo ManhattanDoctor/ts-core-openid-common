@@ -1,18 +1,18 @@
 import { IDestroyable, Loadable, ObservableData } from '@ts-core/common';
-import { IOpenIdToken } from '../../lib';
+import { IOpenIdRefreshable } from '../../lib';
 import { KeycloakToken } from './KeycloakToken';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
 import { filter, map, Observable } from 'rxjs';
 import * as _ from 'lodash';
 
-export class KeycloakTokenManager extends Loadable<KeycloakTokenManagerEvent, IOpenIdToken> implements IKeycloakTokenManager {
+export class KeycloakTokenManager<T extends IOpenIdRefreshable = IOpenIdRefreshable> extends Loadable<KeycloakTokenManagerEvent, T> implements IKeycloakTokenManager {
     //--------------------------------------------------------------------------
     //
     // 	Properties
     //
     //--------------------------------------------------------------------------
 
-    protected _value: IOpenIdToken;
+    protected _value: T;
     protected _access: KeycloakAccessToken;
     protected _refresh: KeycloakToken;
 
@@ -22,7 +22,7 @@ export class KeycloakTokenManager extends Loadable<KeycloakTokenManagerEvent, IO
     //
     //--------------------------------------------------------------------------
 
-    constructor(value?: IOpenIdToken) {
+    constructor(value?: T) {
         super();
         this.value = value;
     }
@@ -34,8 +34,8 @@ export class KeycloakTokenManager extends Loadable<KeycloakTokenManagerEvent, IO
     //--------------------------------------------------------------------------
 
     protected commitValueProperties(): void {
-        this._access = this.isValid ? new KeycloakAccessToken(this.value.access_token) : null;
-        this._refresh = this.isValid ? new KeycloakToken(this.value.refresh_token) : null;
+        this._access = this.isValid ? new KeycloakAccessToken(this.value.accessToken) : null;
+        this._refresh = this.isValid ? new KeycloakToken(this.value.refreshToken) : null;
         if (!_.isNil(this.observer)) {
             this.observer.next(new ObservableData(KeycloakTokenManagerEvent.CHANGED, this.value));
         }
@@ -69,11 +69,11 @@ export class KeycloakTokenManager extends Loadable<KeycloakTokenManagerEvent, IO
         return this._refresh;
     }
 
-    public get value(): IOpenIdToken {
+    public get value(): T {
         return this._value;
     }
 
-    public set value(value: IOpenIdToken) {
+    public set value(value: T) {
         if (value === this._value) {
             return;
         }
@@ -89,7 +89,7 @@ export class KeycloakTokenManager extends Loadable<KeycloakTokenManagerEvent, IO
         return !_.isNil(this.value);
     }
 
-    public get changed(): Observable<IOpenIdToken> {
+    public get changed(): Observable<IOpenIdRefreshable> {
         return this.events.pipe(
             filter(item => item.type === KeycloakTokenManagerEvent.CHANGED),
             map(() => null)
@@ -109,6 +109,6 @@ export interface IKeycloakTokenManager extends IDestroyable {
     readonly isValid: boolean;
     readonly isExpired: boolean;
 
-    value: IOpenIdToken;
+    value: IOpenIdRefreshable;
 }
 
