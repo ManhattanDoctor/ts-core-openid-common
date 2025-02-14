@@ -22,9 +22,18 @@ export abstract class KeycloakHttpTransport<S extends ITransportHttpSettings = I
 
     protected commitTokenProperties(): void { }
 
-    protected abstract getTokenByRefreshToken(token: string): Promise<IOpenIdRefreshable>;
+    protected async checkRefreshable<V = any, U = any>(path: string, request?: ITransportHttpRequest<U>, options?: O): Promise<void> {
+        if (!this.token.isValid) {
+            throw new OpenIdTokenUndefinedError();
+        }
+        if (this.token.isExpired) {
+            this.token.value = await this.getRefreshable();
+        }
+    }
 
-    protected abstract isSkipRefreshToken<U = any>(path: string, request?: ITransportHttpRequest<U>, options?: ITransportCommandOptions): boolean;
+    protected abstract getRefreshable(): Promise<IOpenIdRefreshable>;
+
+    protected abstract isSkipCheckRefreshable<U = any>(path: string, request?: ITransportHttpRequest<U>, options?: ITransportCommandOptions): boolean;
 
     // --------------------------------------------------------------------------
     //
@@ -33,13 +42,8 @@ export abstract class KeycloakHttpTransport<S extends ITransportHttpSettings = I
     // --------------------------------------------------------------------------
 
     public async call<V = any, U = any>(path: string, request?: ITransportHttpRequest<U>, options?: O): Promise<V> {
-        if (!this.isSkipRefreshToken(path, request, options)) {
-            if (!this.token.isValid) {
-                throw new OpenIdTokenUndefinedError();
-            }
-            if (this.token.isExpired) {
-                this.token.value = await this.getTokenByRefreshToken(this.token.refresh.value);
-            }
+        if (!this.isSkipCheckRefreshable(path, request, options)) {
+            await this.checkRefreshable(path, request, options);
         }
         return super.call(path, request, options);
     }
