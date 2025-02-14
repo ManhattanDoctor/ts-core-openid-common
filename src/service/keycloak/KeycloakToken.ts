@@ -1,7 +1,7 @@
 import { IOpenIdTokenContent, IOpenIdTokenHeader, OpenIdToken } from '../../lib';
 import * as _ from 'lodash';
 
-export class KeycloakToken extends OpenIdToken<IKeycloakTokenHeader, IKeycloakContent> { }
+export class KeycloakToken<H extends IKeycloakTokenHeader = IKeycloakTokenHeader, C extends IKeycloakContent = IKeycloakContent> extends OpenIdToken<H, C> { }
 
 export interface IKeycloakTokenHeader extends IOpenIdTokenHeader {
     alg: string;
@@ -14,4 +14,6 @@ export interface IKeycloakContent extends IOpenIdTokenContent {
     aud: string;
     azp: string;
     notBefore: number;
+    realm_access: object;
+    resource_access: object;
 }

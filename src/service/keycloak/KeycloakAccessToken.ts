@@ -1,9 +1,9 @@
 import { ObjectUtil } from '@ts-core/common';
 import { IOpenIdUser } from '../../lib';
-import { KeycloakToken } from './KeycloakToken';
+import { IKeycloakContent, IKeycloakTokenHeader, KeycloakToken } from './KeycloakToken';
 import * as _ from 'lodash';
 
-export class KeycloakAccessToken extends KeycloakToken {
+export class KeycloakAccessToken<H extends IKeycloakTokenHeader = IKeycloakTokenHeader, C extends IKeycloakContent = IKeycloakContent> extends KeycloakToken<H, C> {
 
     // --------------------------------------------------------------------------
     //
@@ -33,4 +33,4 @@ export class KeycloakAccessToken extends KeycloakToken {
     public hasRealmRole(name: string): boolean {
         return this.hasRole('realm_access.roles', name);
     }
-}
+}      
