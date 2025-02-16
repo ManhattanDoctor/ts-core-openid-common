@@ -81,6 +81,7 @@ export class OpenIdToken<H extends IOpenIdTokenHeader = IOpenIdTokenHeader, C ex
 
 export interface IOpenIdToken {
     value: string;
+    readonly isExpired: boolean;
 }
 
 export interface IOpenIdTokenHeader { }

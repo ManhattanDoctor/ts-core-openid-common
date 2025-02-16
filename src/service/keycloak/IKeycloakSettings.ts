@@ -9,6 +9,8 @@ export interface IKeycloakSettings {
 export interface IKeycloakAdministratorSettings {
     url: string;
     realm: string;
-    userName: string;
-    userPassword: string;
+    login: string;
+    password: string;
+    clientId: string;
+    clientSecret: string;
 }

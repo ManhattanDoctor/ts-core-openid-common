@@ -1,5 +1,5 @@
 import { OpenIdService } from '../OpenIdService';
-import { IOpenIdCode, IOpenIdRefreshable, IOpenIdUser } from '../../lib';
+import { IOpenIdCode, IOpenIdTokenRefreshable, IOpenIdUser } from '../../lib';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakClient } from './KeycloakClient';
 import { IOpenIdOfflineValidationOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
@@ -37,11 +37,11 @@ export class KeycloakService extends OpenIdService {
         return this.client(token).getUserInfo<T>(isOffline);
     }
 
-    public async getTokenByCode<T extends IOpenIdRefreshable>(code: IOpenIdCode): Promise<T> {
+    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode): Promise<T> {
         return this.client(null).getTokenByCode(code);
     }
 
-    public async getTokenByRefreshToken<T extends IOpenIdRefreshable>(token: string): Promise<T> {
+    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string): Promise<T> {
         return this.client(null).getTokenByRefreshToken(token);
     }
 

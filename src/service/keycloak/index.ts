@@ -5,4 +5,4 @@ export * from './KeycloakService';
 export * from './IKeycloakSettings';
 export * from './KeycloakAccessToken';
 export * from './KeycloakTokenManager';
-export * from './KeycloakHttpTransport';
+export * from './KeycloakAdministratorTransport';

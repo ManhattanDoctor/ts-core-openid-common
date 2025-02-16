@@ -1,5 +1,5 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
-import { IOpenIdCode, IOpenIdRefreshable, IOpenIdUser } from '../../lib';
+import { IOpenIdCode, IOpenIdTokenRefreshable, IOpenIdUser } from '../../lib';
 import { OpenIdNotAuthorizedError, OpenIdSessionNotActiveError, OpenIdTokenNotActiveError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
@@ -141,7 +141,6 @@ export class KeycloakClient extends DestroyableContainer {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': `Bearer ${this.token}`
         });
-
     }
 
     // --------------------------------------------------------------------------
@@ -156,7 +155,7 @@ export class KeycloakClient extends DestroyableContainer {
         });
     }
 
-    public async getTokenByCode<T extends IOpenIdRefreshable>(code: IOpenIdCode): Promise<T> {
+    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode): Promise<T> {
         let data = {
             code: code.code,
             client_id: this.settings.clientId,
@@ -165,10 +164,10 @@ export class KeycloakClient extends DestroyableContainer {
             client_secret: this.settings.clientSecret,
         };
         let { access_token, refresh_token } = await this.post('token', data);
-        return { accessToken: access_token, refreshToken: refresh_token } as any;
+        return { access: access_token, refresh: refresh_token } as T;
     }
 
-    public async getTokenByRefreshToken<T extends IOpenIdRefreshable>(token: string): Promise<T> {
+    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string): Promise<T> {
         let data = {
             client_id: this.settings.clientId,
             grant_type: 'refresh_token',
@@ -176,7 +175,7 @@ export class KeycloakClient extends DestroyableContainer {
             client_secret: this.settings.clientSecret,
         };
         let { access_token, refresh_token } = await this.post('token', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
-        return { accessToken: access_token, refreshToken: refresh_token } as any;
+        return { access: access_token, refresh: refresh_token } as T;
     }
 
     public logoutByRefreshToken(token: string): Promise<void> {

@@ -1,4 +1,7 @@
 export * from './IOpenIdCode';
 export * from './IOpenIdUser';
 export * from './IOpenIdToken';
-export * from './IOpenIdRefreshable';
+export * from './IOpenIdTokenRefreshable';
+export * from './IOpenIdTokenRefreshableManager';
+//
+export * from './OpenIdTokenRefreshableTransport';
