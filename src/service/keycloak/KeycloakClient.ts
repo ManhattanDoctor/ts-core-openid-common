@@ -1,5 +1,5 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
-import { IOpenIdCode, IOpenIdTokenRefreshable, IOpenIdUser } from '../../lib';
+import { IOpenIdCode, IOpenIdResource, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
 import { OpenIdNotAuthorizedError, OpenIdSessionNotActiveError, OpenIdTokenNotActiveError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
@@ -83,7 +83,6 @@ export class KeycloakClient extends DestroyableContainer {
             if (error_description === 'not_authorized') {
                 return new OpenIdNotAuthorizedError(details);
             }
-
         }
         return item;
     }
@@ -127,7 +126,7 @@ export class KeycloakClient extends DestroyableContainer {
         return KeycloakUtil.validateToken(this.token, options);
     }
 
-    public async getResources(options?: OpenIdResourceValidationOptions): Promise<KeycloakResources> {
+    public async getResources(options?: OpenIdResourceValidationOptions): Promise<OpenIdResources> {
         var data = new URLSearchParams();
         data.append('audience', this.settings.clientId);
         data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
@@ -137,10 +136,13 @@ export class KeycloakClient extends DestroyableContainer {
         if (!_.isEmpty(permissions)) {
             permissions.forEach(item => data.append('permission', item));
         }
-        return this.post<KeycloakResources>('token', data, {
+        let items = await this.post<Array<IKeycloakResource>>('token', data, {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': `Bearer ${this.token}`
         });
+        let resources = new Map<string, IOpenIdResource>();
+        items.forEach(item => resources.set(item.rsname, { id: item.rsid, name: item.rsname, scopes: item.scopes }));
+        return resources;
     }
 
     // --------------------------------------------------------------------------
@@ -228,14 +230,12 @@ export class KeycloakClient extends DestroyableContainer {
     }
 }
 
-export interface IKeycloakError {
+interface IKeycloakError {
     error: string;
     error_description: string;
 }
 
-export type KeycloakResources = Array<IKeycloakResource>;
-
-export interface IKeycloakResource {
+interface IKeycloakResource {
     rsid: string;
     rsname: string;
     scopes: Array<string>;

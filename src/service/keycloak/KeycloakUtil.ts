@@ -1,8 +1,7 @@
 import { createVerify } from 'crypto';
 import { OpenIdOptionsPublicKeyUndefinedError, OpenIdTokenExpiredError, OpenIdTokenSignatureInvalidError, OpenIdTokenSignatureAlgorithmUnknownError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError } from '../../error';
-import { KeycloakResources } from './KeycloakClient';
 import { IOpenIdOfflineValidationOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
-import { IOpenIdUser } from '../../lib';
+import { IOpenIdUser, OpenIdResources } from '../../lib';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
 import { KeycloakToken } from './KeycloakToken';
 import * as _ from 'lodash';
@@ -135,13 +134,13 @@ export class KeycloakUtil {
         }
     }
 
-    public static validateResourceScope(options: OpenIdResourceValidationOptions, resources: KeycloakResources): void {
+    public static validateResourceScope(options: OpenIdResourceValidationOptions, resources: OpenIdResources): void {
         let items = !_.isArray(options) ? [options] : options;
         for (let item of items) {
             let { name, scope, isAny } = item;
-            let resource = _.find(resources, { rsname: name });
+            let resource = resources.get(name);
             if (_.isNil(resource)) {
-                throw new OpenIdTokenResourceForbiddenError(resource);
+                throw new OpenIdTokenResourceForbiddenError(item);
             }
             let scopes = !_.isArray(scope) ? [scope] : scope;
             for (let scope of scopes) {

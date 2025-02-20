@@ -5,6 +5,7 @@ export * from './error/OpenIdErrorCode';
 export * from './lib/IOpenIdCode';
 export * from './lib/IOpenIdUser';
 export * from './lib/IOpenIdToken';
+export * from './lib/IOpenIdResource';
 export * from './lib/IOpenIdTokenRefreshable';
 export * from './lib/IOpenIdTokenRefreshableManager';
 export * from './lib/OpenIdTokenRefreshableTransport';

@@ -1,6 +1,6 @@
 import { OpenIdErrorCode } from './OpenIdErrorCode';
 import { ExtendedError } from '@ts-core/common';
-import { IOpenIdResourceScopePermissionOptions } from '../service/IOpenIdOptions';
+import { IOpenIdResourceScopePermissionOptions, IOpenIdResourceValidationOptions } from '../service';
 import * as _ from 'lodash';
 
 export class OpenIdError<T = void> extends ExtendedError<T, OpenIdErrorCode> {
@@ -123,9 +123,9 @@ export class OpenIdTokenResourceInvalidError extends OpenIdError<any> {
         super(OpenIdErrorCode.TOKEN_RESOURCE_INVALID, details, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
-export class OpenIdTokenResourceForbiddenError extends OpenIdError<Array<string>> {
-    constructor(permissions: Array<string>) {
-        super(OpenIdErrorCode.TOKEN_RESOURCE_FORBIDDEN, permissions, ExtendedError.HTTP_CODE_FORBIDDEN);
+export class OpenIdTokenResourceForbiddenError extends OpenIdError<IOpenIdResourceValidationOptions> {
+    constructor(options: IOpenIdResourceValidationOptions) {
+        super(OpenIdErrorCode.TOKEN_RESOURCE_FORBIDDEN, options, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
 export class OpenIdTokenResourceScopeForbiddenError extends OpenIdError<IOpenIdResourceScopePermissionOptions> {
