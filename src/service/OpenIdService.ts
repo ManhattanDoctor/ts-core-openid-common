@@ -1,5 +1,5 @@
 import { IOpenIdOfflineValidationOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from "./IOpenIdOptions";
-import { IOpenIdCode, IOpenIdTokenRefreshable, IOpenIdUser } from "../lib";
+import { IOpenIdCode, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from "../lib";
 
 export abstract class OpenIdService {
     // --------------------------------------------------------------------------
@@ -13,6 +13,8 @@ export abstract class OpenIdService {
     abstract getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode): Promise<T>;
 
     abstract getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string): Promise<T>;
+
+    abstract getResources(token: string, options?: OpenIdResourceValidationOptions): Promise<OpenIdResources>;
 
     abstract logoutByRefreshToken(token: string): Promise<void>;
 

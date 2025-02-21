@@ -20,8 +20,6 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
     //
     // --------------------------------------------------------------------------
 
-    protected commitTokenProperties(): void { }
-
     protected async checkRefreshable<U = any>(path: string, request?: ITransportHttpRequest<U>, options?: O): Promise<void> {
         if (_.isNil(this.token) || !this.token.isValid) {
             throw new OpenIdTokenUndefinedError();
@@ -30,6 +28,17 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
             this.token.value = await this.getRefreshable();
         }
     }
+
+    protected prepareCommand<U>(command: ITransportCommand<U>, options: O): void {
+        super.prepareCommand(command, options);
+        if (_.isNil(this.token) || !this.token.isValid) {
+            return;
+        }
+        let request = command.request as ITransportHttpRequest;
+        request.headers = { Authorization: `Bearer ${this.token.access.value}` };
+    }
+
+    protected commitTokenProperties(): void { }
 
     protected abstract getRefreshable(): Promise<IOpenIdTokenRefreshable>;
 
@@ -41,20 +50,21 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
     //
     // --------------------------------------------------------------------------
 
+    public async refresh(isForce?: boolean): Promise<boolean> {
+        if (_.isNil(this.token) || !this.token.isValid) {
+            return false;
+        }
+        if (this.token.isExpired || isForce) {
+            this.token.value = await this.getRefreshable();
+        }
+        return true;
+    }
+
     public async call<V = any, U = any>(path: string, request?: ITransportHttpRequest<U>, options?: O): Promise<V> {
         if (!this.isSkipCheckRefreshable(path, request, options)) {
             await this.checkRefreshable(path, request, options);
         }
         return super.call(path, request, options);
-    }
-
-    protected prepareCommand<U>(command: ITransportCommand<U>, options: O): void {
-        super.prepareCommand(command, options);
-        if (_.isNil(this.token) || !this.token.isValid) {
-            return;
-        }
-        let request = command.request as ITransportHttpRequest;
-        request.headers = { Authorization: `Bearer ${this.token.access.value}` };
     }
 
     // --------------------------------------------------------------------------

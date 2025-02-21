@@ -94,6 +94,7 @@ export class KeycloakClient extends DestroyableContainer {
     // --------------------------------------------------------------------------
 
     protected commitTokenProperties(): void { }
+    
     protected commitSettingsProperties(): void { }
 
     // --------------------------------------------------------------------------
