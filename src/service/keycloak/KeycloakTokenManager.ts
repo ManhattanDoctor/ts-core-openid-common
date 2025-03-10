@@ -3,18 +3,18 @@ import { KeycloakToken } from './KeycloakToken';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
 import * as _ from 'lodash';
 
-export class KeycloakTokenManager extends OpenIdTokenRefreshableManager<KeycloakAccessToken, KeycloakToken, IOpenIdTokenRefreshable> {
+export class KeycloakTokenManager<A extends KeycloakAccessToken = KeycloakAccessToken, R extends KeycloakToken = KeycloakToken, T extends IOpenIdTokenRefreshable = IOpenIdTokenRefreshable> extends OpenIdTokenRefreshableManager<A, R, T> {
     //--------------------------------------------------------------------------
     //
     // 	Protected Methods
     //
     //--------------------------------------------------------------------------
 
-    protected createAccess(): KeycloakAccessToken {
-        return new KeycloakAccessToken(this.value.access);
+    protected createAccess(): A {
+        return new KeycloakAccessToken(this.value.access) as A;
     }
 
-    protected createRefresh(): KeycloakToken {
-        return new KeycloakToken(this.value.refresh);
+    protected createRefresh(): R {
+        return new KeycloakToken(this.value.refresh) as R;
     }
 }
