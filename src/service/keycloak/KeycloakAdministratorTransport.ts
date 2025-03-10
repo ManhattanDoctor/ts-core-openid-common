@@ -44,6 +44,7 @@ export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSett
                 username: this.settings.login,
                 password: this.settings.password,
                 client_id: this.settings.clientId,
+                client_secret: this.settings.clientSecret,
                 grant_type: 'password',
             }),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
