@@ -43,8 +43,8 @@ export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSett
             data: new URLSearchParams({
                 username: this.settings.login,
                 password: this.settings.password,
+                client_id: this.settings.clientId,
                 grant_type: 'password',
-                client_id: 'admin-cli'
             }),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'post'
