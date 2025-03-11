@@ -140,14 +140,14 @@ export class KeycloakUtil {
             let { name, scope, isAny } = item;
             let resource = resources.get(name);
             if (_.isNil(resource)) {
-                throw new OpenIdTokenResourceForbiddenError(item);
+                throw new OpenIdTokenResourceForbiddenError(name);
             }
             let scopes = !_.isArray(scope) ? [scope] : scope;
             for (let scope of scopes) {
                 let isHasScope = resource.scopes.includes(scope);
                 if (!isAny) {
                     if (!isHasScope) {
-                        throw new OpenIdTokenResourceScopeForbiddenError(item);
+                        throw new OpenIdTokenResourceScopeForbiddenError({ name, scope });
                     }
                 }
                 else {
