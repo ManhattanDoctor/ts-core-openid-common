@@ -1,6 +1,6 @@
 {
     "name": "@ts-core/openid-common",
-    "version": "1.0.33",
+    "version": "1.0.34",
     "description": "Classes and utils for openid",
     "main": "./cjs/public-api.js",
     "module": "./esm/public-api.js",
