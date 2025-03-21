@@ -16,12 +16,20 @@ export class KeycloakUtil {
     public static buildResourcePermission(options: OpenIdResourceValidationOptions): Array<string> {
         let items = !_.isArray(options) ? [options] : options;
         let permissions = new Array();
-        for (let item of items) {
-            if (_.isNil(item) || _.isEmpty(item.name) || _.isEmpty(item.scope)) {
+        for (let option of items) {
+            if (_.isNil(option)) {
                 continue;
             }
-            let scopes = !_.isArray(item.scope) ? [item.scope] : item.scope;
-            permissions.push(`${item.name}#${scopes.join(',')}`);
+            let { name, scope } = option;
+            if (_.isEmpty(name)) {
+                continue;
+            }
+            let value = name;
+            if (!_.isNil(scope)) {
+                let scopes = !_.isArray(scope) ? [scope] : scope;
+                value += `#${scopes.join(',')}`;
+            }
+            permissions.push(value);
         }
         return permissions;
     }
@@ -136,11 +144,14 @@ export class KeycloakUtil {
 
     public static validateResourceScope(options: OpenIdResourceValidationOptions, resources: OpenIdResources): void {
         let items = !_.isArray(options) ? [options] : options;
-        for (let item of items) {
-            let { name, scope, isAny } = item;
+        for (let option of items) {
+            let { name, scope, isAny } = option;
             let resource = resources.get(name);
             if (_.isNil(resource)) {
                 throw new OpenIdTokenResourceForbiddenError(name);
+            }
+            if (_.isNil(scope)) {
+                continue;
             }
             let scopes = !_.isArray(scope) ? [scope] : scope;
             for (let scope of scopes) {
