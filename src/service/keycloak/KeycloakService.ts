@@ -1,5 +1,5 @@
 import { OpenIdService } from '../OpenIdService';
-import { IOpenIdCode, IOpenIdTokenClaim, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
+import { IOpenIdCode, IOpenIdClaim, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakClient } from './KeycloakClient';
 import { IOpenIdOfflineValidationOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
@@ -45,7 +45,7 @@ export class KeycloakService extends OpenIdService {
         return this.client(null).getTokenByRefreshToken(token);
     }
 
-    public async getResources(token: string, options?: OpenIdResourceValidationOptions, claim?: IOpenIdTokenClaim): Promise<OpenIdResources> {
+    public async getResources(token: string, options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources> {
         return this.client(token).getResources(options, claim);
     }
 

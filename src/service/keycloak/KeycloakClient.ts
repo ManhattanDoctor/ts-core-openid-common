@@ -139,7 +139,7 @@ export class KeycloakClient extends DestroyableContainer {
             permissions.forEach(item => data.append('permission', item));
         }
         if (!_.isEmpty(claim)) {
-            let { token, format } = KeycloakUtil.buildResourceClaim(claim);
+            let { token, format } = KeycloakUtil.buildResourceTokenClaim(claim);
             data.append('claim_token', token.toString());
             data.append('claim_token_format', format);
         }
