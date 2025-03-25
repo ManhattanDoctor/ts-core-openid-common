@@ -1,7 +1,8 @@
 import { createVerify } from 'crypto';
+import { isBase64 } from 'class-validator';
 import { OpenIdOptionsPublicKeyUndefinedError, OpenIdTokenExpiredError, OpenIdTokenSignatureInvalidError, OpenIdTokenSignatureAlgorithmUnknownError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError, OpenIdTokenResourcesUndefinedError } from '../../error';
 import { IOpenIdOfflineValidationOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
-import { IOpenIdUser, OpenIdResources } from '../../lib';
+import { IOpenIdClaim, IOpenIdTokenClaim, IOpenIdUser, OpenIdResources } from '../../lib';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
 import { KeycloakToken } from './KeycloakToken';
 import * as _ from 'lodash';
@@ -12,6 +13,20 @@ export class KeycloakUtil {
     //  Public Methods
     //
     // --------------------------------------------------------------------------
+
+    public static buildResourceClaim(claim: IOpenIdClaim): IOpenIdTokenClaim {
+        let { token, format } = claim;
+        if (_.isObject(token)) {
+            token = JSON.stringify(token);
+        }
+        if (!isBase64(token)) {
+            token = Buffer.from(token).toString('base64');
+        }
+        if (!_.isNil(format)) {
+            format = 'urn:ietf:params:oauth:token-type:jwt';
+        }
+        return { token, format };
+    }
 
     public static buildResourcePermission(options: OpenIdResourceValidationOptions): Array<string> {
         let items = !_.isArray(options) ? [options] : options;
