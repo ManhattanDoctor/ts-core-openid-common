@@ -22,7 +22,7 @@ export class KeycloakUtil {
         if (!isBase64(token)) {
             token = Buffer.from(token).toString('base64');
         }
-        if (!_.isNil(format)) {
+        if (_.isNil(format)) {
             format = 'urn:ietf:params:oauth:token-type:jwt';
         }
         return { token, format };
