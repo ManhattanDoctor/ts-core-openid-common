@@ -1,5 +1,5 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
-import { IOpenIdCode, IOpenIdResource, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
+import { IOpenIdCode, IOpenIdResource, IOpenIdTokenClaim, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
 import { OpenIdNotAuthorizedError, OpenIdSessionNotActiveError, OpenIdTokenNotActiveError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
@@ -94,7 +94,7 @@ export class KeycloakClient extends DestroyableContainer {
     // --------------------------------------------------------------------------
 
     protected commitTokenProperties(): void { }
-    
+
     protected commitSettingsProperties(): void { }
 
     // --------------------------------------------------------------------------
@@ -127,7 +127,7 @@ export class KeycloakClient extends DestroyableContainer {
         return KeycloakUtil.validateToken(this.token, options);
     }
 
-    public async getResources(options?: OpenIdResourceValidationOptions): Promise<OpenIdResources> {
+    public async getResources(options?: OpenIdResourceValidationOptions, claim?: IOpenIdTokenClaim): Promise<OpenIdResources> {
         var data = new URLSearchParams();
         data.append('audience', this.settings.clientId);
         data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
@@ -136,6 +136,10 @@ export class KeycloakClient extends DestroyableContainer {
         let permissions = KeycloakUtil.buildResourcePermission(options);
         if (!_.isEmpty(permissions)) {
             permissions.forEach(item => data.append('permission', item));
+        }
+        if (!_.isNil(claim)) {
+            data.append('claim_token', claim.token);
+            data.append('claim_token_format', claim.format);
         }
         let items = await this.post<Array<IKeycloakResource>>('token', data, {
             'Content-Type': 'application/x-www-form-urlencoded',

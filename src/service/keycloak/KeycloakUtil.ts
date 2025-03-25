@@ -1,5 +1,5 @@
 import { createVerify } from 'crypto';
-import { OpenIdOptionsPublicKeyUndefinedError, OpenIdTokenExpiredError, OpenIdTokenSignatureInvalidError, OpenIdTokenSignatureAlgorithmUnknownError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError } from '../../error';
+import { OpenIdOptionsPublicKeyUndefinedError, OpenIdTokenExpiredError, OpenIdTokenSignatureInvalidError, OpenIdTokenSignatureAlgorithmUnknownError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError, OpenIdTokenResourcesUndefinedError } from '../../error';
 import { IOpenIdOfflineValidationOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
 import { IOpenIdUser, OpenIdResources } from '../../lib';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
@@ -143,6 +143,9 @@ export class KeycloakUtil {
     }
 
     public static validateResourceScope(options: OpenIdResourceValidationOptions, resources: OpenIdResources): void {
+        if (_.isNil(resources)) {
+            throw new OpenIdTokenResourcesUndefinedError();
+        }
         let items = !_.isArray(options) ? [options] : options;
         for (let option of items) {
             let { name, scope, isAny } = option;

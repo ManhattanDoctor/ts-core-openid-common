@@ -122,6 +122,11 @@ export class OpenIdTokenResourceForbiddenError extends OpenIdError<string> {
         super(OpenIdErrorCode.TOKEN_RESOURCE_FORBIDDEN, resource, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
+export class OpenIdTokenResourcesUndefinedError extends OpenIdError<void> {
+    constructor() {
+        super(OpenIdErrorCode.TOKEN_RESOURCES_UNDEFINED, null, ExtendedError.HTTP_CODE_FORBIDDEN);
+    }
+}
 export class OpenIdTokenResourceScopeForbiddenError extends OpenIdError<IOpenIdResourceScopePermissionOptions> {
     constructor(options: IOpenIdResourceScopePermissionOptions) {
         super(OpenIdErrorCode.TOKEN_RESOURCE_SCOPE_FORBIDDEN, options, ExtendedError.HTTP_CODE_FORBIDDEN);
