@@ -4,6 +4,7 @@ export * from './error/OpenIdErrorCode';
 //
 export * from './lib/IOpenIdCode';
 export * from './lib/IOpenIdUser';
+export * from './lib/IOpenIdClaim';
 export * from './lib/IOpenIdToken';
 export * from './lib/IOpenIdResource';
 export * from './lib/IOpenIdTokenRefreshable';
