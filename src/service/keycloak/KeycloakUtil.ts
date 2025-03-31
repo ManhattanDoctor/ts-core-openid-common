@@ -14,18 +14,12 @@ export class KeycloakUtil {
     //
     // --------------------------------------------------------------------------
 
-    public static buildResourceTokenClaim(claim: IOpenIdClaim): IOpenIdTokenClaim {
-        let { token, format } = claim;
-        if (_.isObject(token)) {
-            token = JSON.stringify(token);
-        }
+    public static buildResourceTokenClaim(item: IOpenIdClaim): IOpenIdTokenClaim {
+        let token = _.isObject(item) ? JSON.stringify(item) : item.toString();
         if (!isBase64(token)) {
             token = Buffer.from(token).toString('base64');
         }
-        if (_.isNil(format)) {
-            format = 'urn:ietf:params:oauth:token-type:jwt';
-        }
-        return { token, format };
+        return { token, format: 'urn:ietf:params:oauth:token-type:jwt' };
     }
 
     public static buildResourcePermission(options: OpenIdResourceValidationOptions): Array<string> {
