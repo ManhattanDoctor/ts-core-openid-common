@@ -15,7 +15,8 @@ export class KeycloakUtil {
     // --------------------------------------------------------------------------
 
     public static buildResourceTokenClaim(claim: IOpenIdClaim): IOpenIdTokenClaim {
-        let { token, format } = claim;
+        let token = claim.token.toString();
+        let format = claim.format;
         if (_.isObject(token)) {
             token = JSON.stringify(token);
         }

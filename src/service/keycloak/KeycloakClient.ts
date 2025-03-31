@@ -1,6 +1,6 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
 import { IOpenIdClaim, IOpenIdCode, IOpenIdResource, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
-import { OpenIdNotAuthorizedError, OpenIdSessionNotActiveError, OpenIdTokenNotActiveError } from '../../error';
+import { OpenIdAccessDeniedNotAuthorizedError, OpenIdInvalidGrantSessionNotActiveError, OpenIdInvalidGrantTokenNotActiveError, OpenIdTokenNotActiveError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
 import { IOpenIdOfflineValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
@@ -72,16 +72,16 @@ export class KeycloakClient extends DestroyableContainer {
         let { error, error_description } = item.details;
         let details = { code: error, description: error_description };
         if (error === 'invalid_grant') {
-            if (error_description === 'Session not active') {
-                return new OpenIdSessionNotActiveError(details);
-            }
             if (error_description === 'Token is not active') {
-                return new OpenIdTokenNotActiveError(details);
+                return new OpenIdInvalidGrantTokenNotActiveError(details);
+            }
+            if (error_description === 'Session not active') {
+                return new OpenIdInvalidGrantSessionNotActiveError(details);
             }
         }
         if (error === 'access_denied') {
             if (error_description === 'not_authorized') {
-                return new OpenIdNotAuthorizedError(details);
+                return new OpenIdAccessDeniedNotAuthorizedError(details);
             }
         }
         return item;
@@ -113,7 +113,7 @@ export class KeycloakClient extends DestroyableContainer {
             'Authorization': `Basic ${Buffer.from(`${this.settings.clientId}:${this.settings.clientSecret}`).toString('base64')}`
         });
         if (!item.active) {
-            throw new OpenIdTokenNotActiveError(item);
+            throw new OpenIdTokenNotActiveError();
         }
     }
 

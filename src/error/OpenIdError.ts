@@ -1,6 +1,6 @@
 import { OpenIdErrorCode } from './OpenIdErrorCode';
 import { ExtendedError } from '@ts-core/common';
-import { IOpenIdResourceScopePermissionOptions, IOpenIdResourceValidationOptions } from '../service';
+import { IOpenIdResourceScopePermissionOptions } from '../service';
 import * as _ from 'lodash';
 
 export class OpenIdError<T = void> extends ExtendedError<T, OpenIdErrorCode> {
@@ -36,19 +36,20 @@ export interface IOpenIdErrorDetails {
     code: string;
     description: string;
 }
-export class OpenIdNotAuthorizedError extends OpenIdError<IOpenIdErrorDetails> {
+
+export class OpenIdAccessDeniedNotAuthorizedError extends OpenIdError<IOpenIdErrorDetails> {
     constructor(details: IOpenIdErrorDetails) {
-        super(OpenIdErrorCode.NOT_AUTHORIZED, details, ExtendedError.HTTP_CODE_FORBIDDEN);
+        super(OpenIdErrorCode.ACCESS_DENIED_NOT_AUTHORIZED, details, ExtendedError.HTTP_CODE_FORBIDDEN);
     }
 }
-export class OpenIdSessionNotActiveError extends OpenIdError<IOpenIdErrorDetails> {
+export class OpenIdInvalidGrantSessionNotActiveError extends OpenIdError<IOpenIdErrorDetails> {
     constructor(details: IOpenIdErrorDetails) {
-        super(OpenIdErrorCode.SESSION_NOT_ACTIVE, details, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+        super(OpenIdErrorCode.INVALID_GRANT_SESSION_NOT_ACTIVE, details, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
-export class OpenIdTokenNotActiveError extends OpenIdError<IOpenIdErrorDetails> {
+export class OpenIdInvalidGrantTokenNotActiveError extends OpenIdError<IOpenIdErrorDetails> {
     constructor(details: IOpenIdErrorDetails) {
-        super(OpenIdErrorCode.TOKEN_NOT_ACTIVE, details, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+        super(OpenIdErrorCode.INVALID_GRANT_TOKEN_NOT_ACTIVE, details, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
 //
@@ -60,6 +61,11 @@ export class OpenIdTokenUndefinedError extends OpenIdError {
 export class OpenIdTokenInvalidError extends OpenIdError<string> {
     constructor(message: string) {
         super(OpenIdErrorCode.TOKEN_INVALID, message, ExtendedError.HTTP_CODE_UNAUTHORIZED);
+    }
+}
+export class OpenIdTokenNotActiveError extends OpenIdError {
+    constructor() {
+        super(OpenIdErrorCode.TOKEN_NOT_ACTIVE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
 export class OpenIdTokenSignatureInvalidError extends OpenIdError {
