@@ -1,5 +1,5 @@
 export interface IOpenIdClaim {
-    token: Record<string, Array<string>>;
+    token: Record<string, Array<string>> | string;
     format?: string;
 }
 export interface IOpenIdTokenClaim {
