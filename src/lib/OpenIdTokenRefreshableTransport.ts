@@ -35,7 +35,7 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
             return;
         }
         let request = command.request as ITransportHttpRequest;
-        request.headers = { Authorization: `Bearer ${this.token.access.value}` };
+        request.headers = { Authorization: this.authorization };
     }
 
     protected commitTokenProperties(): void { }
@@ -72,6 +72,10 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
     //  Public Properties
     //
     // --------------------------------------------------------------------------
+
+    public get authorization(): string {
+        return !_.isNil(this.token) && !_.isNil(this.token.access) ? `Bearer ${this.token.access.value}` : null;
+    }
 
     public get token(): IOpenIdTokenRefreshableManager {
         return this._token;
