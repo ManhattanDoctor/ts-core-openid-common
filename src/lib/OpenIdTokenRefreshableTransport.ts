@@ -35,7 +35,12 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
             return;
         }
         let request = command.request as ITransportHttpRequest;
-        request.headers = { Authorization: this.authorization };
+        if (_.isNil(request.headers)) {
+            request.headers = {};
+        }
+        if (_.isNil(request.headers.Authorization)) {
+            request.headers.Authorization = this.authorization;
+        }
     }
 
     protected commitTokenProperties(): void { }
