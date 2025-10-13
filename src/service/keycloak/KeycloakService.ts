@@ -13,7 +13,7 @@ export class KeycloakService extends OpenIdService {
     //
     // --------------------------------------------------------------------------
 
-    constructor(private settings: IKeycloakSettings) {
+    constructor(protected settings: IKeycloakSettings) {
         super();
     }
 

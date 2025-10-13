@@ -2,15 +2,17 @@ export interface IKeycloakSettings {
     url: string;
     realm: string;
     clientId: string;
-    clientSecret: string;
     realmPublicKey: string;
+
+    clientSecret?: string;
 }
 
 export interface IKeycloakAdministratorSettings {
     url: string;
     realm: string;
-    login: string;
-    password: string;
     clientId: string;
     clientSecret: string;
+
+    login: string;
+    password: string;
 }

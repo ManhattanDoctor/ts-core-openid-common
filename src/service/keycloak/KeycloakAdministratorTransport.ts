@@ -59,6 +59,16 @@ export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSett
     //
     // --------------------------------------------------------------------------
 
+    public async refresh(isForce?: boolean): Promise<boolean> {
+        if (_.isNil(this.token)) {
+            return false;
+        }
+        if (this.token.isExpired || isForce) {
+            this.token.value = await this.getRefreshable();
+        }
+        return true;
+    }
+
     protected async checkRefreshable<U = any>(path: string, request?: ITransportHttpRequest<U>, options?: O): Promise<void> {
         if (_.isNil(this.token)) {
             throw new OpenIdTokenUndefinedError();
