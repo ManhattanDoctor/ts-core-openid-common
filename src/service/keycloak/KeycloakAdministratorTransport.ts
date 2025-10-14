@@ -41,6 +41,7 @@ export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSett
     protected async getRefreshableByCredentials(): Promise<IOpenIdTokenRefreshable> {
         let { access_token, refresh_token } = await this.call(`realms/${this.settings.realm}/protocol/openid-connect/token`, {
             data: new URLSearchParams({
+                openid: this.settings.scope,
                 username: this.settings.login,
                 password: this.settings.password,
                 client_id: this.settings.clientId,
