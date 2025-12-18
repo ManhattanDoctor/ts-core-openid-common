@@ -1,33 +1,21 @@
 # @ts-core/openid-common
 
-Библиотека для работы с системами аутентификации и авторизации на основе протокола OpenID Connect.
+TypeScript библиотека для работы с OpenID Connect провайдерами (Keycloak и др.).
 
-## 📋 Содержание
+## Содержание
 
-- [Описание](#описание)
 - [Установка](#установка)
-- [Основные возможности](#основные-возможности)
 - [Быстрый старт](#быстрый-старт)
-- [API](#api)
-- [Архитектура](#архитектура)
+- [API Reference](#api-reference)
+  - [KeycloakService](#keycloakservice)
+  - [KeycloakClient](#keycloakclient)
+  - [KeycloakTokenManager](#keycloaktokenmanager)
+  - [KeycloakAdministratorTransport](#keycloakadministratortransport)
+  - [OpenIdTokenRefreshableTransport](#openidtokenrefreshabletransport)
+- [Интерфейсы](#интерфейсы)
 - [Обработка ошибок](#обработка-ошибок)
-- [Примеры использования](#примеры-использования)
-- [Разработка](#разработка)
-- [Лицензия](#лицензия)
-
-## Описание
-
-`@ts-core/openid-common` — это TypeScript библиотека, предназначенная для работы с системами аутентификации и авторизации на основе протокола OpenID Connect. Она предоставляет полный набор инструментов для взаимодействия с провайдерами OpenID, такими как Keycloak, и значительно упрощает управление токенами доступа, проверку прав доступа и аутентификацию пользователей.
-
-### Основное назначение
-
-Библиотека создана для упрощения интеграции систем, основанных на OpenID Connect, в ваши приложения. Она предоставляет возможности для:
-- Аутентификации пользователей через OpenID провайдеров
-- Получения профилей пользователей
-- Проверки ролей и прав доступа
-- Валидации токенов (online и offline)
-- Управления refresh-токенами
-- Обеспечения безопасности через проверку подписей токенов
+- [Примеры](#примеры)
+- [Архитектура](#архитектура)
 
 ## Установка
 
@@ -37,159 +25,115 @@ npm install @ts-core/openid-common
 
 ### Зависимости
 
-Библиотека требует установки следующей зависимости:
-- `@ts-core/common` (версия ~3.0.57)
-
-## Основные возможности
-
-### 1. 🔐 Аутентификация и авторизация
-
-- **Получение токенов по коду авторизации** — метод `getTokenByCode` позволяет обменять код авторизации на токен доступа в рамках стандартного потока OAuth 2.0/OpenID Connect
-- **Обновление токенов** — метод `getTokenByRefreshToken` для получения нового токена доступа с помощью refresh-токена
-- **Выход из системы** — метод `logoutByRefreshToken` для безопасного завершения сессии
-
-### 2. 👤 Работа с данными пользователя
-
-- **Получение информации о пользователе** — метод `getUserInfo` позволяет получить профиль пользователя на основе токена доступа
-- **Online и offline режимы** — поддержка получения данных как через запросы к серверу, так и из самого токена
-
-### 3. 🛡️ Валидация токенов
-
-- **Online валидация** — проверка токена через обращение к серверу OpenID провайдера
-- **Offline валидация** — проверка подписи токена с использованием публичного ключа без обращения к серверу
-- **Проверка срока действия** — автоматическая валидация времени жизни токена
-- **Проверка audience и issuer** — валидация параметров токена для обеспечения безопасности
-
-### 4. 🔑 Управление ролями и ресурсами
-
-- **Проверка ролей** — методы `validateRole` и `hasRole` для проверки наличия у пользователя определенных ролей
-- **Проверка доступа к ресурсам** — методы `validateResource` и `hasResourceScope` для проверки прав доступа к конкретным ресурсам
-- **Получение списка ресурсов** — метод `getResources` возвращает доступные пользователю ресурсы и области видимости (scopes)
-
-### 5. ⚠️ Обработка ошибок
-
-Библиотека определяет детальную систему ошибок для различных сценариев:
-- `TOKEN_EXPIRED` — токен истек
-- `TOKEN_INVALID` — токен невалиден
-- `TOKEN_NOT_ACTIVE` — токен еще не активен
-- `TOKEN_ROLE_FORBIDDEN` — недостаточно прав (роль)
-- `TOKEN_RESOURCE_FORBIDDEN` — недостаточно прав (ресурс)
-- `TOKEN_SIGNATURE_INVALID` — неверная подпись токена
-- И многие другие (см. раздел [Обработка ошибок](#обработка-ошибок))
-
-### 6. 🔧 Утилитарные функции
-
-- Извлечение токена из HTTP-запросов
-- Работа с датами и временными метками
-- Парсинг и преобразование данных токенов
-- Работа с JWT токенами
+- `@ts-core/common` (~3.0.57)
 
 ## Быстрый старт
 
-### Инициализация Keycloak Service
+### Инициализация
 
 ```typescript
 import { KeycloakService, IKeycloakSettings } from '@ts-core/openid-common';
 
-// Настройка подключения к Keycloak
 const settings: IKeycloakSettings = {
-    url: 'https://your-keycloak-server.com',
-    realm: 'your-realm',
-    clientId: 'your-client-id',
-    clientSecret: 'your-client-secret', // опционально
-    publicKey: 'your-public-key' // для offline валидации
+    url: 'https://keycloak.example.com',
+    realm: 'my-realm',
+    clientId: 'my-client',
+    clientSecret: 'my-secret',
+    realmPublicKey: '-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----'
 };
 
-// Создание экземпляра сервиса
-const openIdService = new KeycloakService(settings);
+const service = new KeycloakService(settings);
 ```
 
 ### Получение токена по коду авторизации
 
 ```typescript
-const code = {
-    code: 'authorization-code',
+const tokens = await service.getTokenByCode({
+    code: 'authorization-code-from-callback',
     redirectUri: 'https://your-app.com/callback'
-};
+});
 
-try {
-    const token = await openIdService.getTokenByCode(code);
-    console.log('Access Token:', token.accessToken);
-    console.log('Refresh Token:', token.refreshToken);
-} catch (error) {
-    console.error('Ошибка получения токена:', error);
-}
+console.log('Access Token:', tokens.access);
+console.log('Refresh Token:', tokens.refresh);
 ```
 
 ### Получение информации о пользователе
 
 ```typescript
-try {
-    const userInfo = await openIdService.getUserInfo(accessToken);
-    console.log('Информация о пользователе:', userInfo);
-} catch (error) {
-    console.error('Ошибка получения данных пользователя:', error);
-}
+// Online (запрос к серверу)
+const user = await service.getUserInfo(tokens.access);
+
+// Offline (из токена)
+const userOffline = await service.getUserInfo(tokens.access, true);
+
+console.log('User ID:', user.sub);
 ```
 
 ### Валидация токена
 
 ```typescript
-try {
-    // Online валидация (с обращением к серверу)
-    await openIdService.validateToken(accessToken);
-    
-    // Offline валидация (без обращения к серверу)
-    await openIdService.validateToken(accessToken, { isOffline: true });
-    
-    console.log('Токен валиден');
-} catch (error) {
-    console.error('Токен невалиден:', error);
-}
+// Online валидация (через introspection endpoint)
+await service.validateToken(accessToken);
+
+// Offline валидация (проверка подписи локально)
+await service.validateToken(accessToken, {
+    publicKey: settings.realmPublicKey,
+    clientId: settings.clientId,
+    iss: `${settings.url}/realms/${settings.realm}`
+});
 ```
 
 ### Проверка ролей
 
 ```typescript
-// Проверка с выбросом исключения при отсутствии роли
-try {
-    await openIdService.validateRole(accessToken, {
-        role: 'admin',
-        isRealmRole: true // роль уровня realm
-    });
-    console.log('Пользователь является администратором');
-} catch (error) {
-    console.error('Недостаточно прав');
-}
+// Роли указываются в формате "type:role"
+// realm:admin - роль уровня realm
+// client:editor - роль уровня client (resource_access)
 
-// Проверка с возвратом boolean
-const isAdmin = await openIdService.hasRole(accessToken, {
-    role: 'admin',
-    isRealmRole: true
+// Проверка одной роли
+await service.validateRole(accessToken, { role: 'realm:admin' });
+
+// Проверка нескольких ролей (все обязательны)
+await service.validateRole(accessToken, { role: ['realm:admin', 'client:editor'] });
+
+// Проверка любой из ролей (isAny: true)
+await service.validateRole(accessToken, {
+    role: ['realm:admin', 'realm:moderator'],
+    isAny: true
 });
 
-if (isAdmin) {
-    console.log('Пользователь является администратором');
-}
+// Проверка без исключения (возвращает boolean)
+const isAdmin = await service.hasRole(accessToken, { role: 'realm:admin' });
 ```
 
 ### Проверка доступа к ресурсам
 
 ```typescript
-// Проверка доступа с выбросом исключения
-try {
-    await openIdService.validateResource(accessToken, {
-        resource: 'api-resource',
-        scope: 'read'
-    });
-    console.log('Доступ разрешен');
-} catch (error) {
-    console.error('Доступ запрещен');
-}
+// Проверка доступа к ресурсу
+await service.validateResource(accessToken, { name: 'api-resource' });
 
-// Проверка доступа с возвратом boolean
-const hasAccess = await openIdService.hasResourceScope(accessToken, {
-    resource: 'api-resource',
+// Проверка конкретного scope
+await service.validateResource(accessToken, {
+    name: 'api-resource',
+    scope: 'read'
+});
+
+// Проверка нескольких scopes
+await service.validateResource(accessToken, {
+    name: 'api-resource',
+    scope: ['read', 'write']
+});
+
+// Любой из scopes (isAny: true)
+await service.validateResource(accessToken, {
+    name: 'api-resource',
+    scope: ['read', 'write', 'delete'],
+    isAny: true
+});
+
+// Проверка без исключения
+const hasAccess = await service.hasResourceScope(accessToken, {
+    name: 'api-resource',
     scope: 'write'
 });
 ```
@@ -197,174 +141,567 @@ const hasAccess = await openIdService.hasResourceScope(accessToken, {
 ### Получение доступных ресурсов
 
 ```typescript
-try {
-    const resources = await openIdService.getResources(accessToken);
-    console.log('Доступные ресурсы:', resources);
-} catch (error) {
-    console.error('Ошибка получения ресурсов:', error);
-}
+const resources = await service.getResources(accessToken);
+
+// resources - это Map<string, IOpenIdResource>
+resources.forEach((resource, name) => {
+    console.log(`Resource: ${name}`);
+    console.log(`  ID: ${resource.id}`);
+    console.log(`  Scopes: ${resource.scopes.join(', ')}`);
+});
 ```
 
-## API
+### Обновление токена
 
-### OpenIdService (абстрактный класс)
+```typescript
+const newTokens = await service.getTokenByRefreshToken(tokens.refresh);
+console.log('New Access Token:', newTokens.access);
+```
 
-Базовый класс, определяющий интерфейс для работы с OpenID Connect провайдерами.
+### Выход из системы
 
-#### Методы аутентификации
-
-##### `getUserInfo<T extends IOpenIdUser>(token: string, isOffline?: boolean): Promise<T>`
-Получение информации о пользователе на основе токена доступа.
-
-**Параметры:**
-- `token` — токен доступа
-- `isOffline` — получить данные из токена без обращения к серверу (опционально)
-
-**Возвращает:** Promise с объектом пользователя
+```typescript
+await service.logoutByRefreshToken(tokens.refresh);
+```
 
 ---
 
-##### `getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode): Promise<T>`
-Обмен кода авторизации на токен доступа.
-
-**Параметры:**
-- `code` — объект с кодом авторизации и redirect URI
-
-**Возвращает:** Promise с объектом токена (access token и refresh token)
-
----
-
-##### `getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string): Promise<T>`
-Получение нового токена доступа с помощью refresh-токена.
-
-**Параметры:**
-- `token` — refresh-токен
-
-**Возвращает:** Promise с новым объектом токена
-
----
-
-##### `getResources(token: string, options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources>`
-Получение списка ресурсов, доступных пользователю.
-
-**Параметры:**
-- `token` — токен доступа
-- `options` — параметры фильтрации ресурсов (опционально)
-- `claim` — дополнительные claims для проверки (опционально)
-
-**Возвращает:** Promise с объектом ресурсов и их областей видимости
-
----
-
-##### `logoutByRefreshToken(token: string): Promise<void>`
-Завершение сессии пользователя.
-
-**Параметры:**
-- `token` — refresh-токен
-
-**Возвращает:** Promise<void>
-
----
-
-#### Методы валидации
-
-##### `validateToken(token: string, options?: IOpenIdOfflineValidationOptions): Promise<void>`
-Валидация токена доступа.
-
-**Параметры:**
-- `token` — токен доступа
-- `options` — параметры валидации (online/offline режим, публичный ключ и др.)
-
-**Выбрасывает:** OpenIdError при невалидном токене
-
----
-
-##### `validateRole(token: string, options: IOpenIdRoleValidationOptions): Promise<void>`
-Проверка наличия у пользователя определенной роли.
-
-**Параметры:**
-- `token` — токен доступа
-- `options` — параметры проверки роли (название роли, уровень realm/resource)
-
-**Выбрасывает:** OpenIdError при отсутствии необходимой роли
-
----
-
-##### `validateResource(token: string, options: OpenIdResourceValidationOptions): Promise<void>`
-Проверка доступа пользователя к ресурсу.
-
-**Параметры:**
-- `token` — токен доступа
-- `options` — параметры проверки (название ресурса, scope)
-
-**Выбрасывает:** OpenIdError при отсутствии доступа
-
----
-
-##### `hasRole(token: string, options: IOpenIdRolePermissionOptions): Promise<boolean>`
-Проверка наличия роли без выброса исключения.
-
-**Параметры:**
-- `token` — токен доступа
-- `options` — параметры проверки роли
-
-**Возвращает:** Promise<boolean> — true, если роль есть, false — если нет
-
----
-
-##### `hasResourceScope(token: string, options: OpenIdResourceValidationOptions): Promise<boolean>`
-Проверка доступа к ресурсу без выброса исключения.
-
-**Параметры:**
-- `token` — токен доступа
-- `options` — параметры проверки
-
-**Возвращает:** Promise<boolean> — true, если доступ есть, false — если нет
-
----
+## API Reference
 
 ### KeycloakService
 
-Реализация OpenIdService для работы с Keycloak.
+Основной сервис для работы с Keycloak. Наследует абстрактный класс `OpenIdService`.
+
+#### Конструктор
 
 ```typescript
-const service = new KeycloakService(settings: IKeycloakSettings);
+constructor(settings: IKeycloakSettings)
 ```
 
-**Конфигурация IKeycloakSettings:**
-```typescript
-interface IKeycloakSettings {
-    url: string;              // URL Keycloak сервера
-    realm: string;            // Название realm
-    clientId: string;         // ID клиента
-    clientSecret?: string;    // Секрет клиента (опционально)
-    publicKey?: string;       // Публичный ключ для offline валидации
-}
-```
+#### Методы
+
+| Метод | Описание |
+|-------|----------|
+| `getUserInfo<T>(token, isOffline?)` | Получение информации о пользователе |
+| `getTokenByCode<T>(code)` | Обмен кода авторизации на токены |
+| `getTokenByRefreshToken<T>(token)` | Обновление токенов |
+| `getResources(token, options?, claim?)` | Получение доступных ресурсов |
+| `logoutByRefreshToken(token)` | Завершение сессии |
+| `validateToken(token, options?)` | Валидация токена (online/offline) |
+| `validateRole(token, options)` | Проверка роли с исключением |
+| `validateResource(token, options)` | Проверка ресурса с исключением |
+| `hasRole(token, options)` | Проверка роли (boolean) |
+| `hasResourceScope(token, options)` | Проверка ресурса (boolean) |
+
+---
 
 ### KeycloakClient
 
-Низкоуровневый клиент для прямой работы с Keycloak API.
+Низкоуровневый HTTP-клиент для работы с Keycloak API. Наследует `DestroyableContainer`.
 
 ```typescript
-const client = new KeycloakClient(accessToken: string, settings: IKeycloakSettings);
+const client = new KeycloakClient(accessToken, settings);
+
+// Получение информации о пользователе
+const user = await client.getUserInfo();
+const userOffline = await client.getUserInfo(true);
+
+// Токены
+const tokens = await client.getTokenByCode(code);
+const newTokens = await client.getTokenByRefreshToken(refreshToken);
+
+// Ресурсы
+const resources = await client.getResources(options, claim);
+
+// Валидация
+await client.validateToken();  // online
+await client.validateToken(offlineOptions);  // offline
+await client.validateResource(options);
+
+// Logout
+await client.logoutByRefreshToken(refreshToken);
 ```
+
+---
 
 ### KeycloakTokenManager
 
-Менеджер для управления жизненным циклом токенов с автоматическим обновлением.
+Менеджер токенов с автоматическим отслеживанием состояния. Наследует `OpenIdTokenRefreshableManager`.
 
 ```typescript
-const tokenManager = new KeycloakTokenManager(service: KeycloakService);
+import { KeycloakTokenManager } from '@ts-core/openid-common';
+
+const manager = new KeycloakTokenManager();
+
+// Установка токена
+manager.value = { access: accessToken, refresh: refreshToken };
+
+// Проверка состояния
+console.log('Is Valid:', manager.isValid);
+console.log('Is Expired:', manager.isExpired);
+
+// Доступ к распарсенным токенам
+const accessTokenParsed = manager.access;  // KeycloakAccessToken
+const refreshTokenParsed = manager.refresh; // KeycloakToken
+
+// Подписка на изменения
+manager.changed.subscribe(token => {
+    console.log('Token changed:', token);
+});
+
+// Очистка
+manager.destroy();
 ```
+
+#### Свойства
+
+| Свойство | Тип | Описание |
+|----------|-----|----------|
+| `value` | `IOpenIdTokenRefreshable` | Текущие токены (access + refresh) |
+| `access` | `KeycloakAccessToken` | Распарсенный access token |
+| `refresh` | `KeycloakToken` | Распарсенный refresh token |
+| `isValid` | `boolean` | Есть ли валидное значение |
+| `isExpired` | `boolean` | Истёк ли access token |
+| `changed` | `Observable<IOpenIdTokenRefreshable>` | События изменения токена |
+
+---
 
 ### KeycloakAdministratorTransport
 
-Транспорт для выполнения административных операций в Keycloak.
+HTTP-транспорт с автоматической аутентификацией для административного API Keycloak.
 
 ```typescript
-const adminTransport = new KeycloakAdministratorTransport(settings: IKeycloakSettings);
+import { KeycloakAdministratorTransport, IKeycloakAdministratorSettings } from '@ts-core/openid-common';
+
+const settings: IKeycloakAdministratorSettings = {
+    url: 'https://keycloak.example.com',
+    realm: 'master',
+    clientId: 'admin-cli',
+    clientSecret: 'secret',
+    realmPublicKey: '...',
+    scope: 'openid',
+    login: 'admin',
+    password: 'admin-password'
+};
+
+const transport = new KeycloakAdministratorTransport(logger, settings);
+
+// Токен будет получен автоматически при первом запросе
+const users = await transport.call('admin/realms/my-realm/users', {
+    method: 'get'
+});
+
+// Принудительное обновление токена
+await transport.refresh(true);
 ```
+
+---
+
+### OpenIdTokenRefreshableTransport
+
+Базовый класс для создания HTTP-транспортов с автоматическим обновлением токенов.
+
+```typescript
+import { OpenIdTokenRefreshableTransport } from '@ts-core/openid-common';
+
+class MyApiTransport extends OpenIdTokenRefreshableTransport {
+    protected async getRefreshable(): Promise<IOpenIdTokenRefreshable> {
+        // Логика обновления токена
+        const response = await this.refreshTokenFromServer();
+        return { access: response.access_token, refresh: response.refresh_token };
+    }
+
+    protected isSkipCheckRefreshable(path: string): boolean {
+        // Пути, которые не требуют авторизации
+        return path.includes('/public/');
+    }
+}
+```
+
+#### Ключевые методы
+
+| Метод | Описание |
+|-------|----------|
+| `call(path, request?, options?)` | HTTP-запрос с автоматической авторизацией |
+| `refresh(isForce?)` | Обновление токена |
+| `authorization` | Геттер для заголовка `Bearer {token}` |
+
+---
+
+## Интерфейсы
+
+### IKeycloakSettings
+
+```typescript
+interface IKeycloakSettings {
+    url: string;           // URL сервера Keycloak
+    realm: string;         // Название realm
+    clientId: string;      // ID клиента
+    clientSecret: string;  // Секрет клиента
+    realmPublicKey: string; // Публичный ключ realm (для offline валидации)
+}
+```
+
+### IKeycloakAdministratorSettings
+
+```typescript
+interface IKeycloakAdministratorSettings extends IKeycloakSettings {
+    scope: string;     // Scope для токена (например, 'openid')
+    login: string;     // Логин администратора
+    password: string;  // Пароль администратора
+}
+```
+
+### IOpenIdCode
+
+```typescript
+interface IOpenIdCode {
+    code: string;        // Код авторизации
+    redirectUri: string; // Redirect URI
+}
+```
+
+### IOpenIdTokenRefreshable
+
+```typescript
+interface IOpenIdTokenRefreshable {
+    access: string;  // Access token
+    refresh: string; // Refresh token
+}
+```
+
+### IOpenIdUser
+
+```typescript
+interface IOpenIdUser {
+    sub: string;        // Subject (ID пользователя)
+    [key: string]: any; // Дополнительные поля
+}
+```
+
+### IOpenIdResource
+
+```typescript
+interface IOpenIdResource<T = Record<string, any>> {
+    id: string;                // ID ресурса
+    name: string;              // Название ресурса
+    scopes: Array<string>;     // Доступные scopes
+    type?: string;             // Тип ресурса
+    attributes?: T;            // Атрибуты
+}
+
+type OpenIdResources = Map<string, IOpenIdResource>;
+```
+
+### IOpenIdToken
+
+```typescript
+interface IOpenIdToken {
+    value: string;             // Сырое значение токена
+    readonly isExpired: boolean; // Истёк ли токен
+}
+```
+
+### Опции валидации
+
+```typescript
+// Offline валидация токена
+interface IOpenIdOfflineValidationOptions {
+    iss?: string;              // Ожидаемый issuer
+    type?: string;             // Ожидаемый тип токена
+    notBefore?: number;        // Минимальное время создания (iat)
+    isVerifyAudience?: boolean; // Проверять audience
+    clientId?: string;         // Ожидаемый client ID
+    publicKey?: string;        // Публичный ключ для проверки подписи
+}
+
+// Проверка ролей
+interface IOpenIdRoleValidationOptions {
+    role: string | Array<string>; // Роль(и) в формате "type:name"
+    isAny?: boolean;              // Любая из ролей (по умолчанию все)
+}
+
+// Проверка ресурсов
+interface IOpenIdResourceValidationOptions {
+    name: string;                    // Название ресурса
+    scope?: string | Array<string>;  // Требуемые scopes
+    isAny?: boolean;                 // Любой из scopes
+}
+
+type OpenIdResourceValidationOptions =
+    | IOpenIdResourceValidationOptions
+    | Array<IOpenIdResourceValidationOptions>;
+```
+
+---
+
+## Обработка ошибок
+
+Все ошибки наследуют базовый класс `OpenIdError` и содержат HTTP-код статуса.
+
+### Классы ошибок
+
+| Класс | Код | HTTP | Описание |
+|-------|-----|------|----------|
+| `OpenIdTokenUndefinedError` | `TOKEN_UNDEFINED` | 401 | Токен не передан |
+| `OpenIdTokenInvalidError` | `TOKEN_INVALID` | 401 | Невалидный формат токена |
+| `OpenIdTokenExpiredError` | `TOKEN_EXPIRED` | 401 | Токен истёк |
+| `OpenIdTokenNotActiveError` | `TOKEN_NOT_ACTIVE` | 401 | Токен неактивен |
+| `OpenIdTokenStaleError` | `TOKEN_STALE` | 401 | Токен устарел (iat < notBefore) |
+| `OpenIdTokenNotSignedError` | `TOKEN_NOT_SIGNED` | 403 | Токен не подписан |
+| `OpenIdTokenSignatureInvalidError` | `TOKEN_SIGNATURE_INVALID` | 401 | Неверная подпись |
+| `OpenIdTokenSignatureAlgorithmUnknownError` | `TOKEN_SIGNATURE_ALGORITHM_UNKNOWN` | 401 | Неизвестный алгоритм |
+| `OpenIdTokenWrongIssError` | `TOKEN_WRONG_ISS` | 403 | Неверный issuer |
+| `OpenIdTokenWrongTypeError` | `TOKEN_WRONG_TYPE` | 403 | Неверный тип токена |
+| `OpenIdTokenWrongAudienceError` | `TOKEN_WRONG_AUDIENCE` | 403 | Неверный audience |
+| `OpenIdTokenWrongClientIdError` | `TOKEN_WRONG_CLIENT_ID` | 403 | Неверный client ID |
+| `OpenIdTokenRoleForbiddenError` | `TOKEN_ROLE_FORBIDDEN` | 403 | Роль отсутствует |
+| `OpenIdTokenRoleInvalidTypeError` | `TOKEN_ROLE_INVALID_TYPE` | 403 | Неверный тип роли |
+| `OpenIdTokenResourceForbiddenError` | `TOKEN_RESOURCE_FORBIDDEN` | 403 | Нет доступа к ресурсу |
+| `OpenIdTokenResourcesUndefinedError` | `TOKEN_RESOURCES_UNDEFINED` | 403 | Ресурсы не определены |
+| `OpenIdTokenResourceScopeForbiddenError` | `TOKEN_RESOURCE_SCOPE_FORBIDDEN` | 403 | Нет scope для ресурса |
+| `OpenIdOptionsPublicKeyUndefinedError` | `OPTIONS_PUBLIC_KEY_UNDEFINED` | 403 | Публичный ключ не задан |
+| `OpenIdAccessDeniedNotAuthorizedError` | `ACCESS_DENIED_NOT_AUTHORIZED` | 403 | Доступ запрещён |
+| `OpenIdInvalidGrantTokenNotActiveError` | `INVALID_GRANT_TOKEN_NOT_ACTIVE` | 401 | Токен неактивен (Keycloak) |
+| `OpenIdInvalidGrantSessionNotActiveError` | `INVALID_GRANT_SESSION_NOT_ACTIVE` | 401 | Сессия неактивна (Keycloak) |
+
+### Пример обработки
+
+```typescript
+import {
+    OpenIdErrorCode,
+    OpenIdTokenExpiredError,
+    OpenIdTokenRoleForbiddenError
+} from '@ts-core/openid-common';
+
+try {
+    await service.validateRole(token, { role: 'realm:admin' });
+} catch (error) {
+    if (error instanceof OpenIdTokenExpiredError) {
+        // Обновить токен
+        const newTokens = await service.getTokenByRefreshToken(refreshToken);
+    } else if (error instanceof OpenIdTokenRoleForbiddenError) {
+        // Недостаточно прав
+        console.log('Missing role:', error.details);
+    } else if (error.code === OpenIdErrorCode.TOKEN_INVALID) {
+        // Требуется повторная авторизация
+        redirectToLogin();
+    }
+}
+```
+
+### Проверка типа ошибки
+
+```typescript
+import { OpenIdError } from '@ts-core/openid-common';
+
+if (OpenIdError.instanceOf(error)) {
+    console.log('OpenID Error:', error.code, error.status);
+}
+```
+
+---
+
+## Примеры
+
+### Express.js Middleware
+
+```typescript
+import express from 'express';
+import { KeycloakService, OpenIdError, OpenIdErrorCode } from '@ts-core/openid-common';
+
+const app = express();
+const authService = new KeycloakService(settings);
+
+// Извлечение токена
+function extractToken(req: express.Request): string | null {
+    const auth = req.headers.authorization;
+    return auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+}
+
+// Middleware аутентификации
+async function requireAuth(
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+) {
+    const token = extractToken(req);
+    if (!token) {
+        return res.status(401).json({ error: 'Token required' });
+    }
+
+    try {
+        await authService.validateToken(token, {
+            publicKey: settings.realmPublicKey,
+            clientId: settings.clientId
+        });
+        req.user = await authService.getUserInfo(token, true);
+        next();
+    } catch (error) {
+        const status = OpenIdError.instanceOf(error) ? error.status : 500;
+        res.status(status).json({ error: error.message, code: error.code });
+    }
+}
+
+// Middleware проверки роли
+function requireRole(...roles: string[]) {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        const token = extractToken(req);
+        try {
+            await authService.validateRole(token, { role: roles, isAny: true });
+            next();
+        } catch (error) {
+            res.status(403).json({ error: 'Forbidden' });
+        }
+    };
+}
+
+// Маршруты
+app.get('/api/profile', requireAuth, (req, res) => {
+    res.json(req.user);
+});
+
+app.get('/api/admin', requireAuth, requireRole('realm:admin'), (req, res) => {
+    res.json({ message: 'Admin area' });
+});
+
+app.post('/auth/callback', async (req, res) => {
+    try {
+        const tokens = await authService.getTokenByCode({
+            code: req.body.code,
+            redirectUri: req.body.redirectUri
+        });
+        res.json(tokens);
+    } catch (error) {
+        res.status(400).json({ error: 'Authentication failed' });
+    }
+});
+
+app.post('/auth/refresh', async (req, res) => {
+    try {
+        const tokens = await authService.getTokenByRefreshToken(req.body.refreshToken);
+        res.json(tokens);
+    } catch (error) {
+        res.status(401).json({ error: 'Refresh failed' });
+    }
+});
+
+app.post('/auth/logout', async (req, res) => {
+    try {
+        await authService.logoutByRefreshToken(req.body.refreshToken);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ error: 'Logout failed' });
+    }
+});
+```
+
+### NestJS Guard
+
+```typescript
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { KeycloakService } from '@ts-core/openid-common';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+    constructor(private readonly authService: KeycloakService) {}
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+        const token = this.extractToken(request);
+
+        if (!token) {
+            throw new UnauthorizedException('Token required');
+        }
+
+        try {
+            await this.authService.validateToken(token);
+            request.user = await this.authService.getUserInfo(token, true);
+            return true;
+        } catch (error) {
+            throw new UnauthorizedException(error.message);
+        }
+    }
+
+    private extractToken(request: any): string | null {
+        const auth = request.headers.authorization;
+        return auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    }
+}
+```
+
+### Автоматическое обновление токенов (браузер)
+
+```typescript
+import { KeycloakService, KeycloakTokenManager } from '@ts-core/openid-common';
+
+class AuthManager {
+    private tokenManager = new KeycloakTokenManager();
+    private refreshTimeout?: NodeJS.Timeout;
+
+    constructor(private service: KeycloakService) {
+        // Подписка на изменения токена
+        this.tokenManager.changed.subscribe(() => this.scheduleRefresh());
+    }
+
+    async login(code: string, redirectUri: string): Promise<void> {
+        const tokens = await this.service.getTokenByCode({ code, redirectUri });
+        this.tokenManager.value = tokens;
+    }
+
+    async logout(): Promise<void> {
+        if (this.tokenManager.isValid) {
+            await this.service.logoutByRefreshToken(this.tokenManager.value.refresh);
+        }
+        this.clearRefresh();
+        this.tokenManager.value = null;
+    }
+
+    get accessToken(): string | null {
+        return this.tokenManager.access?.value ?? null;
+    }
+
+    get isAuthenticated(): boolean {
+        return this.tokenManager.isValid && !this.tokenManager.isExpired;
+    }
+
+    private scheduleRefresh(): void {
+        this.clearRefresh();
+
+        if (!this.tokenManager.isValid) return;
+
+        // Обновляем за 30 секунд до истечения
+        const expiresAt = this.tokenManager.access.content.exp * 1000;
+        const refreshAt = expiresAt - Date.now() - 30000;
+
+        if (refreshAt > 0) {
+            this.refreshTimeout = setTimeout(() => this.refresh(), refreshAt);
+        }
+    }
+
+    private async refresh(): Promise<void> {
+        try {
+            const tokens = await this.service.getTokenByRefreshToken(
+                this.tokenManager.value.refresh
+            );
+            this.tokenManager.value = tokens;
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+            this.tokenManager.value = null;
+            // Redirect to login
+        }
+    }
+
+    private clearRefresh(): void {
+        if (this.refreshTimeout) {
+            clearTimeout(this.refreshTimeout);
+            this.refreshTimeout = undefined;
+        }
+    }
+}
+```
+
+---
 
 ## Архитектура
 
@@ -372,386 +709,62 @@ const adminTransport = new KeycloakAdministratorTransport(settings: IKeycloakSet
 
 ```
 src/
-├── error/                          # Классы ошибок
-│   ├── OpenIdError.ts             # Базовый класс ошибок
-│   └── OpenIdErrorCode.ts         # Коды ошибок
-├── lib/                           # Интерфейсы и типы
-│   ├── IOpenIdCode.ts            # Интерфейс кода авторизации
-│   ├── IOpenIdToken.ts           # Интерфейс токена
-│   ├── IOpenIdUser.ts            # Интерфейс пользователя
-│   ├── IOpenIdResource.ts        # Интерфейс ресурса
-│   ├── IOpenIdClaim.ts           # Интерфейс claims
-│   ├── IOpenIdTokenRefreshable.ts        # Интерфейс обновляемого токена
-│   ├── IOpenIdTokenRefreshableManager.ts # Интерфейс менеджера токенов
-│   └── OpenIdTokenRefreshableTransport.ts # Базовый транспорт для работы с токенами
-├── service/                       # Сервисы
-│   ├── OpenIdService.ts          # Абстрактный базовый сервис
-│   ├── IOpenIdOptions.ts         # Интерфейсы опций
-│   └── keycloak/                 # Реализация для Keycloak
-│       ├── KeycloakService.ts    # Основной сервис Keycloak
-│       ├── KeycloakClient.ts     # HTTP клиент для Keycloak API
-│       ├── KeycloakToken.ts      # Класс токена
-│       ├── KeycloakAccessToken.ts # Класс access токена
-│       ├── KeycloakTokenManager.ts # Менеджер токенов
-│       ├── KeycloakUtil.ts       # Утилиты
-│       ├── KeycloakAdministratorTransport.ts # Административный транспорт
-│       └── IKeycloakSettings.ts  # Интерфейс настроек
-└── public-api.ts                  # Публичный API библиотеки
+├── error/
+│   ├── OpenIdError.ts              # Базовый класс ошибок
+│   ├── OpenIdErrorCode.ts          # Enum кодов ошибок
+│   └── index.ts
+├── lib/
+│   ├── IOpenIdCode.ts              # Интерфейс кода авторизации
+│   ├── IOpenIdClaim.ts             # Интерфейс claims
+│   ├── IOpenIdResource.ts          # Интерфейс ресурса
+│   ├── IOpenIdToken.ts             # Базовый класс токена
+│   ├── IOpenIdTokenRefreshable.ts  # Интерфейс пары токенов
+│   ├── IOpenIdTokenRefreshableManager.ts  # Менеджер токенов
+│   ├── IOpenIdUser.ts              # Интерфейс пользователя
+│   ├── OpenIdTokenRefreshableTransport.ts # HTTP-транспорт
+│   └── index.ts
+├── service/
+│   ├── IOpenIdOptions.ts           # Интерфейсы опций
+│   ├── OpenIdService.ts            # Абстрактный сервис
+│   ├── keycloak/
+│   │   ├── IKeycloakSettings.ts    # Настройки Keycloak
+│   │   ├── KeycloakAccessToken.ts  # Access token
+│   │   ├── KeycloakAdministratorTransport.ts # Admin API
+│   │   ├── KeycloakClient.ts       # HTTP-клиент
+│   │   ├── KeycloakService.ts      # Сервис Keycloak
+│   │   ├── KeycloakToken.ts        # Базовый токен
+│   │   ├── KeycloakTokenManager.ts # Менеджер токенов
+│   │   ├── KeycloakUtil.ts         # Утилиты
+│   │   └── index.ts
+│   └── index.ts
+└── public-api.ts                   # Публичный API
 ```
 
-### Ключевые компоненты
+### Диаграмма классов
 
-#### OpenIdService
-Абстрактный класс, определяющий контракт для всех реализаций OpenID Connect провайдеров. Содержит методы для:
-- Аутентификации и получения токенов
-- Валидации токенов
-- Работы с пользовательскими данными
-- Проверки ролей и ресурсов
+```
+OpenIdService (abstract)
+    └── KeycloakService
+            └── uses KeycloakClient
 
-#### KeycloakService
-Конкретная реализация OpenIdService для работы с Keycloak. Использует KeycloakClient для выполнения HTTP запросов к Keycloak API.
+OpenIdToken
+    └── KeycloakToken
+            └── KeycloakAccessToken
 
-#### KeycloakClient
-Низкоуровневый клиент, инкапсулирующий всю логику взаимодействия с REST API Keycloak. Обрабатывает:
-- Получение и обновление токенов
-- Валидацию токенов (online и offline)
-- Работу с пользовательскими данными
-- Проверку ролей и ресурсов
+OpenIdTokenRefreshableManager (abstract)
+    └── KeycloakTokenManager
 
-#### KeycloakTokenManager
-Менеджер для автоматического управления жизненным циклом токенов. Поддерживает:
-- Автоматическое обновление токенов при истечении
-- Кэширование токенов
-- Обработку ошибок обновления
+OpenIdTokenRefreshableTransport (abstract)
+    └── KeycloakAdministratorTransport
 
-#### KeycloakUtil
-Набор утилитарных функций для:
-- Парсинга JWT токенов
-- Извлечения claims из токенов
-- Проверки ролей
-- Работы с датами и временными метками
-
-## Обработка ошибок
-
-Библиотека использует собственную систему ошибок на основе класса `OpenIdError`. Все ошибки содержат код ошибки из перечисления `OpenIdErrorCode`.
-
-### Коды ошибок токена
-
-| Код | Описание |
-|-----|----------|
-| `TOKEN_EXPIRED` | Токен истек |
-| `TOKEN_INVALID` | Токен невалиден |
-| `TOKEN_NOT_ACTIVE` | Токен еще не активен (nbf > текущее время) |
-| `TOKEN_UNDEFINED` | Токен не передан |
-| `TOKEN_STALE` | Токен устарел |
-| `TOKEN_WRONG_ISS` | Неверный issuer токена |
-| `TOKEN_WRONG_TYPE` | Неверный тип токена |
-| `TOKEN_WRONG_AUDIENCE` | Неверный audience |
-| `TOKEN_WRONG_CLIENT_ID` | Неверный client ID |
-
-### Коды ошибок ролей и ресурсов
-
-| Код | Описание |
-|-----|----------|
-| `TOKEN_ROLE_FORBIDDEN` | Недостаточно прав (отсутствует требуемая роль) |
-| `TOKEN_ROLE_INVALID_TYPE` | Неверный тип роли |
-| `TOKEN_RESOURCE_FORBIDDEN` | Нет доступа к ресурсу |
-| `TOKEN_RESOURCES_UNDEFINED` | Ресурсы не определены в токене |
-| `TOKEN_RESOURCE_SCOPE_FORBIDDEN` | Нет требуемого scope для ресурса |
-
-### Коды ошибок подписи
-
-| Код | Описание |
-|-----|----------|
-| `TOKEN_NOT_SIGNED` | Токен не подписан |
-| `TOKEN_SIGNATURE_INVALID` | Неверная подпись токена |
-| `TOKEN_SIGNATURE_ALGORITHM_UNKNOWN` | Неизвестный алгоритм подписи |
-
-### Коды ошибок конфигурации
-
-| Код | Описание |
-|-----|----------|
-| `OPTIONS_PUBLIC_KEY_UNDEFINED` | Публичный ключ не определен (для offline валидации) |
-
-### Коды ошибок авторизации
-
-| Код | Описание |
-|-----|----------|
-| `ACCESS_DENIED_NOT_AUTHORIZED` | Доступ запрещен (не авторизован) |
-| `INVALID_GRANT_TOKEN_NOT_ACTIVE` | Токен неактивен |
-| `INVALID_GRANT_SESSION_NOT_ACTIVE` | Сессия неактивна |
-
-### Пример обработки ошибок
-
-```typescript
-import { OpenIdErrorCode } from '@ts-core/openid-common';
-
-try {
-    await openIdService.validateToken(accessToken);
-} catch (error) {
-    if (error.code === OpenIdErrorCode.TOKEN_EXPIRED) {
-        // Токен истек, попробуем обновить
-        try {
-            const newToken = await openIdService.getTokenByRefreshToken(refreshToken);
-            // Используем новый токен
-        } catch (refreshError) {
-            // Не удалось обновить токен, требуется повторная аутентификация
-            redirectToLogin();
-        }
-    } else if (error.code === OpenIdErrorCode.TOKEN_INVALID) {
-        // Токен невалиден, требуется повторная аутентификация
-        redirectToLogin();
-    } else {
-        // Другие ошибки
-        console.error('Ошибка валидации:', error);
-    }
-}
+OpenIdError (base)
+    ├── OpenIdTokenExpiredError
+    ├── OpenIdTokenInvalidError
+    ├── OpenIdTokenRoleForbiddenError
+    └── ... (и другие)
 ```
 
-## Примеры использования
-
-### Полный пример аутентификации
-
-```typescript
-import { KeycloakService, IKeycloakSettings, OpenIdErrorCode } from '@ts-core/openid-common';
-
-// 1. Настройка сервиса
-const settings: IKeycloakSettings = {
-    url: 'https://keycloak.example.com',
-    realm: 'my-realm',
-    clientId: 'my-app',
-    clientSecret: 'secret',
-    publicKey: '-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----'
-};
-
-const authService = new KeycloakService(settings);
-
-// 2. Обработка callback после редиректа с Keycloak
-async function handleAuthCallback(code: string, redirectUri: string) {
-    try {
-        // Получаем токены
-        const tokens = await authService.getTokenByCode({ code, redirectUri });
-        
-        // Сохраняем токены
-        sessionStorage.setItem('access_token', tokens.accessToken);
-        sessionStorage.setItem('refresh_token', tokens.refreshToken);
-        
-        // Получаем информацию о пользователе
-        const user = await authService.getUserInfo(tokens.accessToken);
-        console.log('Авторизован пользователь:', user);
-        
-        return user;
-    } catch (error) {
-        console.error('Ошибка аутентификации:', error);
-        throw error;
-    }
-}
-
-// 3. Middleware для проверки авторизации
-async function authMiddleware(accessToken: string) {
-    try {
-        // Валидируем токен
-        await authService.validateToken(accessToken, { isOffline: true });
-        return true;
-    } catch (error) {
-        if (error.code === OpenIdErrorCode.TOKEN_EXPIRED) {
-            // Пытаемся обновить токен
-            const refreshToken = sessionStorage.getItem('refresh_token');
-            if (refreshToken) {
-                try {
-                    const newTokens = await authService.getTokenByRefreshToken(refreshToken);
-                    sessionStorage.setItem('access_token', newTokens.accessToken);
-                    sessionStorage.setItem('refresh_token', newTokens.refreshToken);
-                    return true;
-                } catch (refreshError) {
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
-}
-
-// 4. Проверка прав доступа
-async function checkAdminAccess(accessToken: string): Promise<boolean> {
-    const isAdmin = await authService.hasRole(accessToken, {
-        role: 'admin',
-        isRealmRole: true
-    });
-    
-    return isAdmin;
-}
-
-// 5. Выход из системы
-async function logout(refreshToken: string) {
-    try {
-        await authService.logoutByRefreshToken(refreshToken);
-        sessionStorage.clear();
-    } catch (error) {
-        console.error('Ошибка при выходе:', error);
-    }
-}
-```
-
-### Использование с Express.js
-
-```typescript
-import express from 'express';
-import { KeycloakService } from '@ts-core/openid-common';
-
-const app = express();
-const authService = new KeycloakService(settings);
-
-// Middleware для извлечения токена
-function extractToken(req: express.Request): string | null {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        return authHeader.substring(7);
-    }
-    return null;
-}
-
-// Middleware для проверки аутентификации
-async function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
-    const token = extractToken(req);
-    
-    if (!token) {
-        return res.status(401).json({ error: 'Токен не предоставлен' });
-    }
-    
-    try {
-        await authService.validateToken(token);
-        req.user = await authService.getUserInfo(token, true);
-        next();
-    } catch (error) {
-        return res.status(401).json({ error: 'Невалидный токен' });
-    }
-}
-
-// Middleware для проверки роли
-function requireRole(role: string) {
-    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        const token = extractToken(req);
-        
-        try {
-            await authService.validateRole(token, { role, isRealmRole: true });
-            next();
-        } catch (error) {
-            return res.status(403).json({ error: 'Недостаточно прав' });
-        }
-    };
-}
-
-// Защищенный маршрут
-app.get('/api/protected', requireAuth, async (req, res) => {
-    res.json({ message: 'Защищенные данные', user: req.user });
-});
-
-// Маршрут только для администраторов
-app.get('/api/admin', requireAuth, requireRole('admin'), async (req, res) => {
-    res.json({ message: 'Административная панель' });
-});
-
-// Callback для OAuth
-app.get('/auth/callback', async (req, res) => {
-    const { code } = req.query;
-    const redirectUri = 'http://localhost:3000/auth/callback';
-    
-    try {
-        const tokens = await authService.getTokenByCode({ 
-            code: code as string, 
-            redirectUri 
-        });
-        
-        // В реальном приложении используйте более безопасный способ хранения токенов
-        res.json(tokens);
-    } catch (error) {
-        res.status(400).json({ error: 'Ошибка аутентификации' });
-    }
-});
-
-app.listen(3000);
-```
-
-### Автоматическое обновление токенов
-
-```typescript
-import { KeycloakTokenManager, KeycloakService } from '@ts-core/openid-common';
-
-class TokenService {
-    private tokenManager: KeycloakTokenManager;
-    private currentTokens: any;
-    
-    constructor(authService: KeycloakService) {
-        this.tokenManager = new KeycloakTokenManager(authService);
-    }
-    
-    async initialize(code: string, redirectUri: string) {
-        // Получаем начальные токены
-        this.currentTokens = await this.tokenManager.getTokenByCode({ code, redirectUri });
-        
-        // Настраиваем автоматическое обновление
-        this.setupTokenRefresh();
-    }
-    
-    private setupTokenRefresh() {
-        // Обновляем токен за 30 секунд до истечения
-        const expiresIn = this.currentTokens.expiresIn || 300;
-        const refreshTime = (expiresIn - 30) * 1000;
-        
-        setTimeout(async () => {
-            try {
-                this.currentTokens = await this.tokenManager.getTokenByRefreshToken(
-                    this.currentTokens.refreshToken
-                );
-                this.setupTokenRefresh(); // Планируем следующее обновление
-            } catch (error) {
-                console.error('Не удалось обновить токен:', error);
-                // Перенаправляем на страницу входа
-            }
-        }, refreshTime);
-    }
-    
-    getAccessToken(): string {
-        return this.currentTokens.accessToken;
-    }
-    
-    async logout() {
-        await this.tokenManager.logoutByRefreshToken(this.currentTokens.refreshToken);
-        this.currentTokens = null;
-    }
-}
-```
-
-## Разработка
-
-### Требования
-
-- Node.js >= 14
-- TypeScript >= 4.x
-- npm или yarn
-
-### Сборка проекта
-
-Проект поддерживает сборку в форматах CommonJS и ES Modules:
-
-```bash
-# Сборка CommonJS
-npx tsc -p tsconfig.cjs.json
-
-# Сборка ES Modules
-npx tsc -p tsconfig.esm.json
-```
-
-### Структура сборки
-
-После сборки создаются следующие директории:
-- `cjs/` — CommonJS модули
-- `esm/` — ES модули
-
-### Использование Makefile
-
-Проект включает Makefile для автоматизации задач разработки.
+---
 
 ## Лицензия
 
@@ -759,17 +772,11 @@ ISC
 
 ## Автор
 
-**Renat Gubaev**
-- Email: renat.gubaev@gmail.com
-- GitHub: [ManhattanDoctor](https://github.com/ManhattanDoctor)
+**Renat Gubaev** - [renat.gubaev@gmail.com](mailto:renat.gubaev@gmail.com)
 
 ## Ссылки
 
-- [Репозиторий на GitHub](https://github.com/ManhattanDoctor/ts-core-openid-common)
-- [Сообщить о проблеме](https://github.com/ManhattanDoctor/ts-core-openid-common/issues)
-- [Документация OpenID Connect](https://openid.net/connect/)
-- [Документация Keycloak](https://www.keycloak.org/documentation)
-
----
-
-© 2025 Renat Gubaev. Все права защищены.
+- [GitHub](https://github.com/ManhattanDoctor/ts-core-openid-common)
+- [Issues](https://github.com/ManhattanDoctor/ts-core-openid-common/issues)
+- [OpenID Connect](https://openid.net/connect/)
+- [Keycloak Documentation](https://www.keycloak.org/documentation)

@@ -128,7 +128,7 @@ export class KeycloakClient extends DestroyableContainer {
     }
 
     public async getResources(options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources> {
-        var data = new URLSearchParams();
+        let data = new URLSearchParams();
         data.append('audience', this.settings.clientId);
         data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
         data.append('response_mode', 'permissions');
