@@ -1,7 +1,7 @@
 {
     "name": "@ts-core/openid-common",
     "version": "1.0.48",
-    "description": "Classes and utils for openid",
+    "description": "TypeScript library for OpenID Connect authentication with Keycloak support. Provides token validation, role/resource authorization, and automatic token refresh.",
     "main": "./cjs/public-api.js",
     "module": "./esm/public-api.js",
     "exports": {
@@ -28,7 +28,21 @@
         "url": "git+https://github.com/ManhattanDoctor/ts-core-openid-common.git"
     },
     "keywords": [
-        "typescript"
+        "typescript",
+        "openid",
+        "openid-connect",
+        "oidc",
+        "keycloak",
+        "authentication",
+        "authorization",
+        "oauth2",
+        "jwt",
+        "token",
+        "sso",
+        "identity",
+        "access-control",
+        "rbac",
+        "security"
     ],
     "bugs": {
         "url": "https://github.com/ManhattanDoctor/ts-core-openid-common/issues"
