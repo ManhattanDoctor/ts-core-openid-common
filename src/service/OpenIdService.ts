@@ -1,5 +1,5 @@
 import { IOpenIdOfflineValidationOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from "./IOpenIdOptions";
-import { IOpenIdCode, IOpenIdClaim, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from "../lib";
+import { IOpenIdCode, IOpenIdClaim, IOpenIdClientCredentials, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from "../lib";
 
 export abstract class OpenIdService {
     // --------------------------------------------------------------------------
@@ -10,11 +10,11 @@ export abstract class OpenIdService {
 
     abstract getUserInfo<T extends IOpenIdUser>(token: string, isOffline?: boolean): Promise<T>;
 
-    abstract getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, clientId?: string, clientSecret?: string): Promise<T>;
+    abstract getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, credentials?: IOpenIdClientCredentials): Promise<T>;
 
-    abstract getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, clientId?: string, clientSecret?: string): Promise<T>;
+    abstract getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, credentials?: IOpenIdClientCredentials, scope?: string): Promise<T>;
 
-    abstract getTokenByClientCredentials(clientId?: string, clientSecret?: string): Promise<string>;
+    abstract getTokenByClientCredentials(credentials?: IOpenIdClientCredentials, scope?: string): Promise<string>;
 
     abstract getResources(token: string, options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources>;
 

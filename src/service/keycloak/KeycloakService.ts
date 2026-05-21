@@ -1,5 +1,5 @@
 import { OpenIdService } from '../OpenIdService';
-import { IOpenIdCode, IOpenIdClaim, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
+import { IOpenIdCode, IOpenIdClaim, IOpenIdClientCredentials, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakClient } from './KeycloakClient';
 import { IOpenIdOfflineValidationOptions, IOpenIdRolePermissionOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
@@ -37,16 +37,16 @@ export class KeycloakService extends OpenIdService {
         return this.client(token).getUserInfo<T>(isOffline);
     }
 
-    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, clientId?: string, clientSecret?: string): Promise<T> {
-        return this.client().getTokenByCode(code, clientId, clientSecret);
+    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, credentials?: IOpenIdClientCredentials): Promise<T> {
+        return this.client().getTokenByCode(code, credentials);
     }
 
-    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, clientId?: string, clientSecret?: string): Promise<T> {
-        return this.client().getTokenByRefreshToken(token, clientId, clientSecret);
+    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, credentials?: IOpenIdClientCredentials, scope?: string): Promise<T> {
+        return this.client().getTokenByRefreshToken(token, credentials, scope);
     }
 
-    public async getTokenByClientCredentials(clientId?: string, clientSecret?: string): Promise<string> {
-        return this.client().getTokenByClientCredentials(clientId, clientSecret);
+    public async getTokenByClientCredentials(credentials?: IOpenIdClientCredentials, scope?: string): Promise<string> {
+        return this.client().getTokenByClientCredentials(credentials, scope);
     }
 
     public async getResources(token: string, options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources> {

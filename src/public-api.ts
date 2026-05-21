@@ -9,6 +9,7 @@ export * from './lib/IOpenIdToken';
 export * from './lib/IOpenIdResource';
 export * from './lib/IOpenIdTokenRefreshable';
 export * from './lib/IOpenIdTokenRefreshableManager';
+export * from './lib/IOpenIdClientCredentials';
 export * from './lib/OpenIdTokenRefreshableTransport';
 //
 export * from './service/OpenIdService';

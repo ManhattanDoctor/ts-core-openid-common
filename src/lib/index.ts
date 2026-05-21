@@ -4,6 +4,7 @@ export * from './IOpenIdClaim';
 export * from './IOpenIdToken';
 export * from './IOpenIdResource';
 export * from './IOpenIdTokenRefreshable';
+export * from './IOpenIdClientCredentials';
 export * from './IOpenIdTokenRefreshableManager';
 //
 export * from './OpenIdTokenRefreshableTransport';

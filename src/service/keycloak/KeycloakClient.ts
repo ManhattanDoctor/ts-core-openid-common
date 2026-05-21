@@ -1,5 +1,5 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
-import { IOpenIdClaim, IOpenIdCode, IOpenIdResource, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
+import { IOpenIdClaim, IOpenIdCode, IOpenIdResource, IOpenIdClientCredentials, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
 import { OpenIdAccessDeniedNotAuthorizedError, OpenIdInvalidGrantSessionNotActiveError, OpenIdInvalidGrantTokenNotActiveError, OpenIdTokenNotActiveError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
@@ -130,11 +130,14 @@ export class KeycloakClient extends DestroyableContainer {
     }
 
     public async getResources(options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources> {
-        let data: any = {
+        let data = {
             audience: this.settings.clientId,
             grant_type: 'urn:ietf:params:oauth:grant-type:uma-ticket',
             response_mode: 'permissions',
             client_secret: this.settings.clientSecret,
+            permission: null,
+            claim_token: null,
+            claim_token_format: null
         };
 
         if (!_.isEmpty(options)) {
@@ -167,7 +170,9 @@ export class KeycloakClient extends DestroyableContainer {
         });
     }
 
-    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, clientId?: string, clientSecret?: string): Promise<T> {
+    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, credentials?: IOpenIdClientCredentials): Promise<T> {
+        let clientId = credentials?.clientId;
+        let clientSecret = credentials?.clientSecret;
         if (_.isNil(clientId)) {
             clientId = this.settings.clientId;
         }
@@ -185,7 +190,9 @@ export class KeycloakClient extends DestroyableContainer {
         return { access: access_token, refresh: refresh_token } as T;
     }
 
-    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, clientId?: string, clientSecret?: string): Promise<T> {
+    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, credentials?: IOpenIdClientCredentials, scope?: string): Promise<T> {
+        let clientId = credentials?.clientId;
+        let clientSecret = credentials?.clientSecret;
         if (_.isNil(clientId)) {
             clientId = this.settings.clientId;
         }
@@ -197,12 +204,15 @@ export class KeycloakClient extends DestroyableContainer {
             refresh_token: token,
             client_id: clientId,
             client_secret: clientSecret,
+            scope,
         };
         let { access_token, refresh_token } = await this.post('token', data);
         return { access: access_token, refresh: refresh_token } as T;
     }
 
-    public async getTokenByClientCredentials(clientId?: string, clientSecret?: string): Promise<string> {
+    public async getTokenByClientCredentials(credentials?: IOpenIdClientCredentials, scope?: string): Promise<string> {
+        let clientId = credentials?.clientId;
+        let clientSecret = credentials?.clientSecret;
         if (_.isNil(clientId)) {
             clientId = this.settings.clientId;
         }
@@ -213,6 +223,7 @@ export class KeycloakClient extends DestroyableContainer {
             grant_type: 'client_credentials',
             client_id: clientId,
             client_secret: clientSecret,
+            scope,
         };
         let { access_token } = await this.post('token', data);
         return access_token;
