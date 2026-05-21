@@ -237,14 +237,14 @@ export class KeycloakClient extends DestroyableContainer {
 
     // --------------------------------------------------------------------------
     //
-    //  Protected Methods
+    //  Public Properties
     //
     // --------------------------------------------------------------------------
 
-    protected get token(): string {
+    public get token(): string {
         return this._token;
     }
-    protected set token(value: string) {
+    public set token(value: string) {
         if (value === this._token) {
             return;
         }
@@ -254,10 +254,10 @@ export class KeycloakClient extends DestroyableContainer {
         }
     }
 
-    protected get settings(): IKeycloakSettings {
+    public get settings(): IKeycloakSettings {
         return this._settings;
     }
-    protected set settings(value: IKeycloakSettings) {
+    public set settings(value: IKeycloakSettings) {
         if (value === this._settings) {
             return;
         }
