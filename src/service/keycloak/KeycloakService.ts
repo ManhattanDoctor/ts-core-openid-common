@@ -23,7 +23,7 @@ export class KeycloakService extends OpenIdService {
     //
     // --------------------------------------------------------------------------
 
-    protected client(token: string): KeycloakClient {
+    protected client(token?: string): KeycloakClient {
         return new KeycloakClient(token, this.settings);
     }
 
@@ -37,12 +37,16 @@ export class KeycloakService extends OpenIdService {
         return this.client(token).getUserInfo<T>(isOffline);
     }
 
-    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode): Promise<T> {
-        return this.client(null).getTokenByCode(code);
+    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, clientId?: string, clientSecret?: string): Promise<T> {
+        return this.client().getTokenByCode(code, clientId, clientSecret);
     }
 
-    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string): Promise<T> {
-        return this.client(null).getTokenByRefreshToken(token);
+    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, clientId?: string, clientSecret?: string): Promise<T> {
+        return this.client().getTokenByRefreshToken(token, clientId, clientSecret);
+    }
+
+    public async getTokenByClientCredentials(clientId?: string, clientSecret?: string): Promise<string> {
+        return this.client().getTokenByClientCredentials(clientId, clientSecret);
     }
 
     public async getResources(token: string, options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources> {
@@ -50,7 +54,7 @@ export class KeycloakService extends OpenIdService {
     }
 
     public async logoutByRefreshToken(token: string): Promise<void> {
-        return this.client(null).logoutByRefreshToken(token);
+        return this.client().logoutByRefreshToken(token);
     }
 
     // --------------------------------------------------------------------------

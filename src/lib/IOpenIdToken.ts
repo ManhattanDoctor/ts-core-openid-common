@@ -37,12 +37,13 @@ export class OpenIdToken<H extends IOpenIdTokenHeader = IOpenIdTokenHeader, C ex
     // --------------------------------------------------------------------------
 
     protected commitTokenProperties(): void {
+        let encoding: BufferEncoding = 'base64url';
         try {
             let array = this.value.split('.');
             this._signed = `${array[0]}.${array[1]}`;
-            this._header = TransformUtil.toJSON(Buffer.from(array[0], 'base64').toString());
-            this._content = TransformUtil.toJSON(Buffer.from(array[1], 'base64').toString());
-            this._signature = Buffer.from(array[2], 'base64');
+            this._header = TransformUtil.toJSON(Buffer.from(array[0], encoding).toString());
+            this._content = TransformUtil.toJSON(Buffer.from(array[1], encoding).toString());
+            this._signature = Buffer.from(array[2], encoding);
         } catch (error) {
             throw new OpenIdTokenInvalidError(error.message);
         }

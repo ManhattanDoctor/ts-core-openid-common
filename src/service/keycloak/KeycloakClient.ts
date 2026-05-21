@@ -41,7 +41,9 @@ export class KeycloakClient extends DestroyableContainer {
 
     protected async post<T = any>(url: string, body?: any, headers?: any): Promise<T> {
         try {
-            let { data } = await axios.post<T>(this.getUrl(url), new URLSearchParams(body), { headers });
+            let { data } = await axios.post<T>(this.getUrl(url), KeycloakUtil.toFormData(body), {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers }
+            });
             return data;
         }
         catch (error) {
@@ -108,46 +110,46 @@ export class KeycloakClient extends DestroyableContainer {
             token: this.token,
             token_type_hint: 'requesting_party_token'
         }
-        let item = await this.post<any>(`token/introspect`, data, {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(`${this.settings.clientId}:${this.settings.clientSecret}`).toString('base64')}`
-        });
+        let item = await this.post<any>(`token/introspect`, data, { 'Authorization': `Basic ${Buffer.from(`${this.settings.clientId}:${this.settings.clientSecret}`).toString('base64')}` });
         if (!item.active) {
             throw new OpenIdTokenNotActiveError();
         }
     }
 
     protected async validateOffline(options: IOpenIdOfflineValidationOptions): Promise<void> {
-        if (_.isNil(options.clientId)) {
-            options.clientId = this.settings.clientId;
+        let clientId = options.clientId;
+        let publicKey = options.publicKey;
+        if (_.isNil(clientId)) {
+            clientId = this.settings.clientId;
         }
-        if (_.isNil(options.publicKey)) {
-            options.publicKey = this.settings.realmPublicKey;
+        if (_.isNil(publicKey)) {
+            publicKey = this.settings.realmPublicKey;
         }
-        return KeycloakUtil.validateToken(this.token, options);
+        let item: IOpenIdOfflineValidationOptions = { ...options, clientId, publicKey };
+        return KeycloakUtil.validateToken(this.token, item);
     }
 
     public async getResources(options?: OpenIdResourceValidationOptions, claim?: IOpenIdClaim): Promise<OpenIdResources> {
-        let data = new URLSearchParams();
-        data.append('audience', this.settings.clientId);
-        data.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
-        data.append('response_mode', 'permissions');
-        data.append('client_secret', this.settings.clientSecret);
+        let data: any = {
+            audience: this.settings.clientId,
+            grant_type: 'urn:ietf:params:oauth:grant-type:uma-ticket',
+            response_mode: 'permissions',
+            client_secret: this.settings.clientSecret,
+        };
 
-        let permissions = KeycloakUtil.buildResourcePermission(options);
-        if (!_.isEmpty(permissions)) {
-            permissions.forEach(item => data.append('permission', item));
+        if (!_.isEmpty(options)) {
+            let permissions = KeycloakUtil.buildResourcePermission(options);
+            if (!_.isEmpty(permissions)) {
+                data.permission = permissions;
+            }
         }
         if (!_.isEmpty(claim)) {
             let { token, format } = KeycloakUtil.buildResourceTokenClaim(claim);
-            data.append('claim_token', token);
-            data.append('claim_token_format', format);
+            data.claim_token = token;
+            data.claim_token_format = format;
         }
 
-        let items = await this.post<Array<IKeycloakResource>>('token', data, {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Bearer ${this.token}`
-        });
+        let items = await this.post<Array<IKeycloakResource>>('token', data, { 'Authorization': `Bearer ${this.token}` });
         let resources = new Map<string, IOpenIdResource>();
         items.forEach(item => resources.set(item.rsname, { id: item.rsid, name: item.rsname, scopes: item.scopes }));
         return resources;
@@ -165,27 +167,55 @@ export class KeycloakClient extends DestroyableContainer {
         });
     }
 
-    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode): Promise<T> {
+    public async getTokenByCode<T extends IOpenIdTokenRefreshable>(code: IOpenIdCode, clientId?: string, clientSecret?: string): Promise<T> {
+        if (_.isNil(clientId)) {
+            clientId = this.settings.clientId;
+        }
+        if (_.isNil(clientSecret)) {
+            clientSecret = this.settings.clientSecret;
+        }
         let data = {
             code: code.code,
-            client_id: this.settings.clientId,
             grant_type: 'authorization_code',
             redirect_uri: code.redirectUri,
-            client_secret: this.settings.clientSecret,
+            client_id: clientId,
+            client_secret: clientSecret
         };
         let { access_token, refresh_token } = await this.post('token', data);
         return { access: access_token, refresh: refresh_token } as T;
     }
 
-    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string): Promise<T> {
+    public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, clientId?: string, clientSecret?: string): Promise<T> {
+        if (_.isNil(clientId)) {
+            clientId = this.settings.clientId;
+        }
+        if (_.isNil(clientSecret)) {
+            clientSecret = this.settings.clientSecret;
+        }
         let data = {
-            client_id: this.settings.clientId,
             grant_type: 'refresh_token',
             refresh_token: token,
-            client_secret: this.settings.clientSecret,
+            client_id: clientId,
+            client_secret: clientSecret,
         };
-        let { access_token, refresh_token } = await this.post('token', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
+        let { access_token, refresh_token } = await this.post('token', data);
         return { access: access_token, refresh: refresh_token } as T;
+    }
+
+    public async getTokenByClientCredentials(clientId?: string, clientSecret?: string): Promise<string> {
+        if (_.isNil(clientId)) {
+            clientId = this.settings.clientId;
+        }
+        if (_.isNil(clientSecret)) {
+            clientSecret = this.settings.clientSecret;
+        }
+        let data = {
+            grant_type: 'client_credentials',
+            client_id: clientId,
+            client_secret: clientSecret,
+        };
+        let { access_token } = await this.post('token', data);
+        return access_token;
     }
 
     public logoutByRefreshToken(token: string): Promise<void> {
@@ -194,7 +224,7 @@ export class KeycloakClient extends DestroyableContainer {
             client_secret: this.settings.clientSecret,
             refresh_token: token,
         };
-        return this.post('logout', data, { 'Content-Type': 'application/x-www-form-urlencoded' });
+        return this.post('logout', data);
     }
 
     public async validateToken(options?: IOpenIdOfflineValidationOptions): Promise<void> {

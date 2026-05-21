@@ -4,6 +4,7 @@ import { IKeycloakAdministratorSettings } from './IKeycloakSettings';
 import { IOpenIdTokenRefreshable, OpenIdTokenRefreshableTransport } from '../../lib';
 import { OpenIdTokenUndefinedError } from '../../error';
 import * as _ from 'lodash';
+import { KeycloakUtil } from './KeycloakUtil';
 
 export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSettings = IKeycloakAdministratorSettings, O extends ITransportCommandOptions = ITransportCommandOptions> extends OpenIdTokenRefreshableTransport<S, O> {
 
@@ -31,7 +32,7 @@ export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSett
             client_secret: this.settings.clientSecret,
         }
         let { access_token, refresh_token } = await this.call(`realms/${this.settings.realm}/protocol/openid-connect/token`, {
-            data: new URLSearchParams(data),
+            data: KeycloakUtil.toFormData(data),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             method: 'post'
         });
@@ -40,7 +41,7 @@ export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSett
 
     protected async getRefreshableByCredentials(): Promise<IOpenIdTokenRefreshable> {
         let { access_token, refresh_token } = await this.call(`realms/${this.settings.realm}/protocol/openid-connect/token`, {
-            data: new URLSearchParams({
+            data: KeycloakUtil.toFormData({
                 scope: this.settings.scope,
                 username: this.settings.login,
                 password: this.settings.password,

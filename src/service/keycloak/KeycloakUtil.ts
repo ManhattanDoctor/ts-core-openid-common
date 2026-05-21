@@ -44,12 +44,35 @@ export class KeycloakUtil {
     }
 
     public static parseRole(role: string): IKeycloakRole {
-        let array = role.split(':');
-        return array.length > 1 ? { type: array[0], role: array[1] } : { type: KeycloakRole.CLIENT, role: array[0] };
+        let index = role.indexOf(':');
+        if (index === -1) {
+            return { type: KeycloakRole.CLIENT, role };
+        }
+        return { type: role.slice(0, index), role: role.slice(index + 1) };
     }
 
     public static getUserInfo<T extends IOpenIdUser>(token: string): T {
         return new KeycloakAccessToken(token).getUserInfo<T>();
+    }
+
+    public static toFormData<T>(data: T): URLSearchParams {
+        let item = new URLSearchParams();
+        if (_.isNil(data)) {
+            return item;
+        }
+        for (let key of Object.keys(data as object)) {
+            let value = data[key];
+            if (_.isNil(value)) {
+                continue;
+            }
+            if (_.isArray(value)) {
+                value.forEach(element => item.append(key, element));
+            }
+            else {
+                item.append(key, value);
+            }
+        }
+        return item;
     }
 
     // --------------------------------------------------------------------------
@@ -81,7 +104,7 @@ export class KeycloakUtil {
             if (!audience.includes(options.clientId)) {
                 throw new OpenIdTokenWrongAudienceError();
             }
-            if (item.content.azp && item.content.azp !== options.clientId) {
+            if (!_.isEmpty(audience) && item.content.azp !== options.clientId) {
                 throw new OpenIdTokenWrongClientIdError();
             }
         } else if (options.isVerifyAudience) {
@@ -121,16 +144,16 @@ export class KeycloakUtil {
     public static validateRole(token: string, options: IOpenIdRoleValidationOptions): void {
         let item = new KeycloakAccessToken(token);
         let roles = !_.isArray(options.role) ? [options.role] : options.role;
-        for (let role of roles) {
-            let isHasRole = KeycloakUtil.hasRole(item, role);
-            if (!options.isAny) {
-                if (!isHasRole) {
-                    throw new OpenIdTokenRoleForbiddenError(role);
-                }
+
+        if (options.isAny) {
+            let hasAnyRole = roles.some(role => KeycloakUtil.hasRole(item, role));
+            if (!hasAnyRole) {
+                throw new OpenIdTokenRoleForbiddenError(roles.join(', '));
             }
-            else {
-                if (isHasRole) {
-                    return;
+        } else {
+            for (let role of roles) {
+                if (!KeycloakUtil.hasRole(item, role)) {
+                    throw new OpenIdTokenRoleForbiddenError(role);
                 }
             }
         }
@@ -166,16 +189,16 @@ export class KeycloakUtil {
                 continue;
             }
             let scopes = !_.isArray(scope) ? [scope] : scope;
-            for (let scope of scopes) {
-                let isHasScope = resource.scopes.includes(scope);
-                if (!isAny) {
-                    if (!isHasScope) {
-                        throw new OpenIdTokenResourceScopeForbiddenError({ name, scope });
-                    }
+            if (isAny) {
+                let hasAnyScope = scopes.some(item => resource.scopes.includes(item));
+                if (!hasAnyScope) {
+                    throw new OpenIdTokenResourceScopeForbiddenError({ name, scope: scopes.join(', ') });
                 }
-                else {
-                    if (isHasScope) {
-                        continue;
+            }
+            else {
+                for (let item of scopes) {
+                    if (!resource.scopes.includes(item)) {
+                        throw new OpenIdTokenResourceScopeForbiddenError({ name, scope: item });
                     }
                 }
             }
