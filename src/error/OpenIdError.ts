@@ -90,17 +90,17 @@ export class OpenIdTokenStaleError extends OpenIdError {
 }
 export class OpenIdTokenNotSignedError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_NOT_SIGNED, null, ExtendedError.HTTP_CODE_FORBIDDEN);
+        super(OpenIdErrorCode.TOKEN_NOT_SIGNED, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
 export class OpenIdTokenWrongTypeError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_WRONG_TYPE, null, ExtendedError.HTTP_CODE_FORBIDDEN);
+        super(OpenIdErrorCode.TOKEN_WRONG_TYPE, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
 export class OpenIdTokenWrongIssError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.TOKEN_WRONG_ISS, null, ExtendedError.HTTP_CODE_FORBIDDEN);
+        super(OpenIdErrorCode.TOKEN_WRONG_ISS, null, ExtendedError.HTTP_CODE_UNAUTHORIZED);
     }
 }
 export class OpenIdTokenWrongAudienceError extends OpenIdError {
@@ -140,6 +140,6 @@ export class OpenIdTokenResourceScopeForbiddenError extends OpenIdError<IOpenIdR
 }
 export class OpenIdOptionsPublicKeyUndefinedError extends OpenIdError {
     constructor() {
-        super(OpenIdErrorCode.OPTIONS_PUBLIC_KEY_UNDEFINED, null, ExtendedError.HTTP_CODE_FORBIDDEN);
+        super(OpenIdErrorCode.OPTIONS_PUBLIC_KEY_UNDEFINED, null, ExtendedError.HTTP_CODE_INTERNAL_SERVER_ERROR);
     }
 }
