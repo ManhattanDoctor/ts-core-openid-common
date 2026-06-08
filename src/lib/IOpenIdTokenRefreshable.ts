@@ -1,4 +1,4 @@
 export interface IOpenIdTokenRefreshable {
     access: string;
-    refresh: string;
+    refresh?: string;
 }

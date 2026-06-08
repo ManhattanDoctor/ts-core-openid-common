@@ -11,10 +11,10 @@ export class KeycloakTokenManager<A extends KeycloakAccessToken = KeycloakAccess
     //--------------------------------------------------------------------------
 
     protected createAccess(): A {
-        return new KeycloakAccessToken(this.value.access) as A;
+        return !_.isNil(this.value.access) ? new KeycloakAccessToken(this.value.access) as A : null;
     }
 
     protected createRefresh(): R {
-        return new KeycloakToken(this.value.refresh) as R;
+        return !_.isNil(this.value.refresh) ? new KeycloakToken(this.value.refresh) as R : null;
     }
 }

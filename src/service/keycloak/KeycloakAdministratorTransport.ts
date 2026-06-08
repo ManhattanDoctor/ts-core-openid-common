@@ -81,7 +81,7 @@ export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSett
     }
 
     protected getRefreshable(): Promise<IOpenIdTokenRefreshable> {
-        return !this.token.isValid || this.token.refresh.isExpired ? this.getRefreshableByCredentials() : this.getRefreshableByToken();
+        return !this.token.isValid || _.isNil(this.token.refresh) || this.token.refresh.isExpired ? this.getRefreshableByCredentials() : this.getRefreshableByToken();
     }
 
     protected isSkipCheckRefreshable<U = any>(path: string, request?: ITransportHttpRequest<U>, options?: ITransportCommandOptions): boolean {
