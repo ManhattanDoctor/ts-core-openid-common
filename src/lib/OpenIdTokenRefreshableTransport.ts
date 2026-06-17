@@ -65,6 +65,11 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
         return true;
     }
 
+    public async getToken(): Promise<IOpenIdTokenRefreshable> {
+        await this.checkRefreshable(null);
+        return this.token.value;
+    }
+
     public async call<V = any, U = any>(path: string, request?: ITransportHttpRequest<U>, options?: O): Promise<V> {
         if (!this.isSkipCheckRefreshable(path, request, options)) {
             await this.checkRefreshable(path, request, options);
