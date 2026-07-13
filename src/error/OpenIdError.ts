@@ -143,3 +143,8 @@ export class OpenIdOptionsPublicKeyUndefinedError extends OpenIdError {
         super(OpenIdErrorCode.OPTIONS_PUBLIC_KEY_UNDEFINED, null, ExtendedError.HTTP_CODE_INTERNAL_SERVER_ERROR);
     }
 }
+export class OpenIdOptionsClientSecretUndefinedError extends OpenIdError {
+    constructor() {
+        super(OpenIdErrorCode.OPTIONS_CLIENT_SECRET_UNDEFINED, null, ExtendedError.HTTP_CODE_INTERNAL_SERVER_ERROR);
+    }
+}

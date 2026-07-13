@@ -76,6 +76,9 @@ export class OpenIdToken<H extends IOpenIdTokenHeader = IOpenIdTokenHeader, C ex
     }
 
     public get isExpired(): boolean {
+        if (!_.isFinite(this.content.exp)) {
+            return true;
+        }
         return this.content.exp * DateUtil.MILLISECONDS_SECOND < Date.now();
     }
 }

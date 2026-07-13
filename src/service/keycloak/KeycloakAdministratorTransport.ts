@@ -3,8 +3,8 @@ import { ITransportHttpRequest, ITransportCommandOptions, ILogger } from '@ts-co
 import { IKeycloakAdministratorSettings } from './IKeycloakSettings';
 import { IOpenIdTokenRefreshable, OpenIdTokenRefreshableTransport } from '../../lib';
 import { OpenIdTokenUndefinedError } from '../../error';
-import * as _ from 'lodash';
 import { KeycloakUtil } from './KeycloakUtil';
+import * as _ from 'lodash';
 
 export class KeycloakAdministratorTransport<S extends IKeycloakAdministratorSettings = IKeycloakAdministratorSettings, O extends ITransportCommandOptions = ITransportCommandOptions> extends OpenIdTokenRefreshableTransport<S, O> {
 

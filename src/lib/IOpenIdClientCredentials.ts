@@ -1,4 +1,4 @@
 export interface IOpenIdClientCredentials {
     clientId: string;
-    clientSecret: string;
+    clientSecret?: string;
 }

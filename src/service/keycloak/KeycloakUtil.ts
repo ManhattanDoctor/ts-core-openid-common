@@ -130,9 +130,17 @@ export class KeycloakUtil {
                 throw new OpenIdTokenSignatureAlgorithmUnknownError(alg);
         }
         let verify = createVerify(algorithm).update(token.signed);
-        if (!verify.verify(options.publicKey, token.signature.toString('base64'), 'base64')) {
+        if (!verify.verify(KeycloakUtil.toPublicKeyPem(options.publicKey), token.signature.toString('base64'), 'base64')) {
             throw new OpenIdTokenSignatureInvalidError();
         }
+    }
+
+    public static toPublicKeyPem(item: string): string {
+        if (item.includes('-----BEGIN')) {
+            return item;
+        }
+        let key = item.replace(/\s+/g, '').match(/.{1,64}/g).join('\n');
+        return `-----BEGIN PUBLIC KEY-----\n${key}\n-----END PUBLIC KEY-----`;
     }
 
     // --------------------------------------------------------------------------

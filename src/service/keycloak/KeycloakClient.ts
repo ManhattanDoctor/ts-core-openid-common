@@ -1,6 +1,6 @@
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
 import { IOpenIdClaim, IOpenIdCode, IOpenIdResource, IOpenIdClientCredentials, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
-import { OpenIdAccessDeniedNotAuthorizedError, OpenIdInvalidGrantSessionNotActiveError, OpenIdInvalidGrantTokenNotActiveError, OpenIdTokenNotActiveError } from '../../error';
+import { OpenIdAccessDeniedNotAuthorizedError, OpenIdInvalidGrantSessionNotActiveError, OpenIdInvalidGrantTokenNotActiveError, OpenIdOptionsClientSecretUndefinedError, OpenIdTokenNotActiveError } from '../../error';
 import { IKeycloakSettings } from './IKeycloakSettings';
 import { KeycloakUtil } from './KeycloakUtil';
 import { IOpenIdOfflineValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
@@ -106,6 +106,9 @@ export class KeycloakClient extends DestroyableContainer {
     // --------------------------------------------------------------------------
 
     protected async validateOnline(): Promise<void> {
+        if (_.isNil(this.settings.clientSecret)) {
+            throw new OpenIdOptionsClientSecretUndefinedError();
+        }
         let data = {
             token: this.token,
             token_type_hint: 'requesting_party_token'
