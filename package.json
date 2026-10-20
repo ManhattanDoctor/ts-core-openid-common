@@ -21,7 +21,7 @@
     },
     "devDependencies": {
         "@types/node": "^14.14.31",
-        "gulp-npm-module-publisher": "^3.0.5"
+        "gulp-npm-module-publisher": "^3.0.6"
     },
     "repository": {
         "type": "git",

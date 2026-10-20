@@ -189,8 +189,8 @@ export class KeycloakClient extends DestroyableContainer {
             client_id: clientId,
             client_secret: clientSecret
         };
-        let { access_token, refresh_token } = await this.post('token', data);
-        return { access: access_token, refresh: refresh_token } as T;
+        let { access_token, refresh_token, id_token } = await this.post('token', data);
+        return { access: access_token, refresh: refresh_token, id: id_token } as T;
     }
 
     public async getTokenByRefreshToken<T extends IOpenIdTokenRefreshable>(token: string, credentials?: IOpenIdClientCredentials, scope?: string): Promise<T> {
@@ -209,8 +209,8 @@ export class KeycloakClient extends DestroyableContainer {
             client_secret: clientSecret,
             scope,
         };
-        let { access_token, refresh_token } = await this.post('token', data);
-        return { access: access_token, refresh: refresh_token } as T;
+        let { access_token, refresh_token, id_token } = await this.post('token', data);
+        return { access: access_token, refresh: refresh_token, id: id_token } as T;
     }
 
     public async getTokenByClientCredentials(credentials?: IOpenIdClientCredentials, scope?: string): Promise<string> {
