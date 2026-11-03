@@ -1,3 +1,4 @@
+import { KeycloakJwks } from './KeycloakJwks';
 import { DestroyableContainer, ExtendedError, isAxiosError, ObjectUtil, parseAxiosError } from '@ts-core/common';
 import { IOpenIdClaim, IOpenIdCode, IOpenIdResource, IOpenIdClientCredentials, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
 import { OpenIdAccessDeniedNotAuthorizedError, OpenIdInvalidGrantSessionNotActiveError, OpenIdInvalidGrantTokenNotActiveError, OpenIdOptionsClientSecretUndefinedError, OpenIdTokenNotActiveError } from '../../error';
@@ -23,7 +24,7 @@ export class KeycloakClient extends DestroyableContainer {
     //
     // --------------------------------------------------------------------------
 
-    constructor(token?: string, settings?: IKeycloakSettings) {
+    constructor(token?: string, settings?: IKeycloakSettings, protected jwks?: KeycloakJwks) {
         super();
         if (!_.isNil(token)) {
             this.token = token;
@@ -127,6 +128,12 @@ export class KeycloakClient extends DestroyableContainer {
         }
         if (_.isNil(publicKey)) {
             publicKey = this.settings.realmPublicKey;
+        }
+        if (_.isNil(publicKey)) {
+            if (!this.jwks || this.jwks.url !== KeycloakJwks.getUrl(this.settings)) {
+                this.jwks = new KeycloakJwks(this.settings);
+            }
+            publicKey = await this.jwks.getPublicKey(this.token);
         }
         let item: IOpenIdOfflineValidationOptions = { ...options, clientId, publicKey };
         return KeycloakUtil.validateToken(this.token, item);

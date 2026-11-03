@@ -92,4 +92,6 @@ export interface IOpenIdTokenHeader { }
 
 export interface IOpenIdTokenContent {
     exp: number;
+    /** Earliest time the token may be accepted, in Unix seconds. */
+    nbf?: number;
 }

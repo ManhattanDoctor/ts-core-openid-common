@@ -6,3 +6,4 @@ export * from './IKeycloakSettings';
 export * from './KeycloakAccessToken';
 export * from './KeycloakTokenManager';
 export * from './KeycloakAdministratorTransport';
+export * from './KeycloakJwks';

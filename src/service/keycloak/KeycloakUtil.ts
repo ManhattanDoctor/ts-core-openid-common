@@ -1,6 +1,6 @@
 import { createVerify } from 'crypto';
 import { isBase64 } from 'class-validator';
-import { OpenIdOptionsPublicKeyUndefinedError, OpenIdTokenExpiredError, OpenIdTokenSignatureInvalidError, OpenIdTokenSignatureAlgorithmUnknownError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError, OpenIdTokenResourcesUndefinedError } from '../../error';
+import { OpenIdTokenInvalidError, OpenIdTokenNotActiveError, OpenIdOptionsPublicKeyUndefinedError, OpenIdTokenExpiredError, OpenIdTokenSignatureInvalidError, OpenIdTokenSignatureAlgorithmUnknownError, OpenIdTokenNotSignedError, OpenIdTokenResourceForbiddenError, OpenIdTokenResourceScopeForbiddenError, OpenIdTokenRoleForbiddenError, OpenIdTokenRoleInvalidTypeError, OpenIdTokenStaleError, OpenIdTokenUndefinedError, OpenIdTokenWrongAudienceError, OpenIdTokenWrongClientIdError, OpenIdTokenWrongIssError, OpenIdTokenWrongTypeError, OpenIdTokenResourcesUndefinedError } from '../../error';
 import { IOpenIdOfflineValidationOptions, IOpenIdRoleValidationOptions, OpenIdResourceValidationOptions } from '../IOpenIdOptions';
 import { IOpenIdClaim, IOpenIdTokenClaim, IOpenIdUser, OpenIdResources } from '../../lib';
 import { KeycloakAccessToken } from './KeycloakAccessToken';
@@ -88,6 +88,14 @@ export class KeycloakUtil {
         }
         if (item.isExpired) {
             throw new OpenIdTokenExpiredError();
+        }
+        if (item.content.nbf !== undefined) {
+            if (!_.isFinite(item.content.nbf)) {
+                throw new OpenIdTokenInvalidError('The nbf claim must be a finite number of Unix seconds');
+            }
+            if (item.content.nbf > Date.now() / 1000) {
+                throw new OpenIdTokenNotActiveError();
+            }
         }
         if (!_.isNil(options.iss) && options.iss !== item.content.iss) {
             throw new OpenIdTokenWrongIssError();

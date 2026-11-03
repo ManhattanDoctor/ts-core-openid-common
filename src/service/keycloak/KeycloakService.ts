@@ -1,3 +1,4 @@
+import { KeycloakJwks } from './KeycloakJwks';
 import { OpenIdService } from '../OpenIdService';
 import { IOpenIdCode, IOpenIdClaim, IOpenIdClientCredentials, IOpenIdTokenRefreshable, IOpenIdUser, OpenIdResources } from '../../lib';
 import { IKeycloakSettings } from './IKeycloakSettings';
@@ -7,6 +8,7 @@ import { KeycloakUtil } from './KeycloakUtil';
 import * as _ from 'lodash';
 
 export class KeycloakService extends OpenIdService {
+    private jwks: KeycloakJwks;
     // --------------------------------------------------------------------------
     //
     //  Constructor
@@ -15,6 +17,7 @@ export class KeycloakService extends OpenIdService {
 
     constructor(protected settings: IKeycloakSettings) {
         super();
+        this.jwks = new KeycloakJwks(settings);
     }
 
     // --------------------------------------------------------------------------
@@ -24,7 +27,7 @@ export class KeycloakService extends OpenIdService {
     // --------------------------------------------------------------------------
 
     protected client(token?: string): KeycloakClient {
-        return new KeycloakClient(token, this.settings);
+        return new KeycloakClient(token, this.settings, this.jwks);
     }
 
     // --------------------------------------------------------------------------

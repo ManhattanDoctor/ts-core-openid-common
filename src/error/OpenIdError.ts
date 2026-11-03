@@ -148,3 +148,9 @@ export class OpenIdOptionsClientSecretUndefinedError extends OpenIdError {
         super(OpenIdErrorCode.OPTIONS_CLIENT_SECRET_UNDEFINED, null, ExtendedError.HTTP_CODE_INTERNAL_SERVER_ERROR);
     }
 }
+
+export class OpenIdJwksUnavailableError extends OpenIdError {
+    constructor() {
+        super(OpenIdErrorCode.JWKS_UNAVAILABLE, null, 503);
+    }
+}
