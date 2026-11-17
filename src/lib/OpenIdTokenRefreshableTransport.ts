@@ -1,5 +1,5 @@
 
-import { TransportHttp, ITransportHttpRequest, ITransportCommandOptions, ITransportCommand, ITransportHttpSettings } from '@ts-core/common';
+import { PromiseHandler, TransportHttp, ITransportHttpRequest, ITransportCommandOptions, ITransportCommand, ITransportHttpSettings } from '@ts-core/common';
 import { IOpenIdTokenRefreshableManager } from './IOpenIdTokenRefreshableManager';
 import { OpenIdTokenUndefinedError } from '../error';
 import { IOpenIdTokenRefreshable } from './IOpenIdTokenRefreshable';
@@ -14,6 +14,8 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
 
     protected _token: IOpenIdTokenRefreshableManager;
 
+    protected refreshing: PromiseHandler<void, unknown>;
+
     // --------------------------------------------------------------------------
     //
     //  Protected Methods
@@ -24,9 +26,7 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
         if (_.isNil(this.token) || !this.token.isValid) {
             throw new OpenIdTokenUndefinedError();
         }
-        if (this.token.isExpired) {
-            this.token.value = await this.getRefreshable();
-        }
+        await this.refresh();
     }
 
     protected prepareCommand<U>(command: ITransportCommand<U>, options: O): void {
@@ -56,12 +56,35 @@ export abstract class OpenIdTokenRefreshableTransport<S extends ITransportHttpSe
     // --------------------------------------------------------------------------
 
     public async refresh(isForce?: boolean): Promise<boolean> {
-        if (_.isNil(this.token) || !this.token.isValid) {
+        let token = this.token;
+        if (_.isNil(token) || !token.isValid) {
             return false;
         }
-        if (this.token.isExpired || isForce) {
-            this.token.value = await this.getRefreshable();
+        if (!_.isNil(this.refreshing)) {
+            await this.refreshing.promise;
+            return true;
         }
+        if (!token.isExpired && !isForce) {
+            return true;
+        }
+
+        let value = token.value;
+        let promise = this.refreshing = PromiseHandler.create<void, unknown>();
+        try {
+            let result = await this.getRefreshable();
+            if (this.token !== token || token.value !== value) {
+                throw new OpenIdTokenUndefinedError();
+            }
+            token.value = result;
+            promise.resolve();
+        }
+        catch (error) {
+            promise.reject(error);
+        }
+        finally {
+            this.refreshing = null;
+        }
+        await promise.promise;
         return true;
     }
 
